@@ -207,6 +207,12 @@ deploy_service() {
   local helm_revision
   helm_revision="$(sudo microk8s helm3 status "$RELEASE_NAME" -n "$NAMESPACE" --output json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
   local evidence_file="$EVIDENCE_DIR/${service}-${commit}-$(date -u +%Y%m%dT%H%M%SZ).txt"
+  local rollback_command
+  if (( helm_revision > 1 )); then
+    rollback_command="sudo microk8s helm3 rollback $RELEASE_NAME $((helm_revision - 1)) -n $NAMESPACE --wait --timeout 180s"
+  else
+    rollback_command="first revision: disable this service in desired-state, restore the previous gateway/upstream if needed, then run sudo microk8s helm3 uninstall $RELEASE_NAME -n $NAMESPACE"
+  fi
 
   {
     echo "service=$service"
@@ -218,7 +224,7 @@ deploy_service() {
     echo "helm_revision=$helm_revision"
     echo "started_at=$started_at"
     echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    echo "rollback=sudo microk8s helm3 rollback $RELEASE_NAME $((helm_revision - 1)) -n $NAMESPACE --wait --timeout 180s"
+    echo "rollback=$rollback_command"
   } > "$evidence_file"
 
   echo "==> Done. Evidence: $evidence_file"
