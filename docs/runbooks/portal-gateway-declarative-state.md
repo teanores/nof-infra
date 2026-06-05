@@ -14,8 +14,12 @@ As of 2026-06-05, owner approved deployment of `nof-mp` v0.2.0.
 - Public platform host: `https://forgath.ru`
 - Platform service key: `nof-mp`
 - Live platform upstream inside `portal-gateway`: `nof-mp:3000`
+- Live Task Tracker public host in VPS Caddy: `task-tracker.forgath.ru`
+- Live Task Tracker `server_name` inside `portal-gateway`: `task-tracker.forgath.ru`
 - Legacy rollback upstream: `nof-platform:3000`
 - ConfigMap backup before switch: `/home/nofadminhbl/portal-gateway-configmap.backup-20260605T2110Z.yaml`
+- ConfigMap backup before removing legacy Task Tracker hostname: `/home/nofadminhbl/portal-gateway-configmap.backup-20260605T2134Z.yaml`
+- VPS Caddy backup before removing legacy Task Tracker hostname: `/etc/caddy/Caddyfile.backup-20260605T2134Z`
 - Smoke checks after switch:
   - `https://forgath.ru/login` -> 200
   - `https://forgath.ru/services/task-tracker` -> 200
@@ -29,6 +33,7 @@ As of 2026-06-05, owner approved deployment of `nof-mp` v0.2.0.
   - `nof-ht` for Habit Tracker routes.
 - Public hostnames may use product names such as `task-tracker.forgath.ru`.
 - Legacy names are allowed only in rollback notes and historical evidence.
+- `forge-tasks.forgath.ru` must not remain as a live public hostname after the Task Tracker cutover.
 
 ## Rollback
 
@@ -45,6 +50,11 @@ If owner rejects production UAT for `nof-mp` v0.2.0:
    `sudo microk8s helm3 uninstall nof-mp -n nof-apps`
 
 Do not use `helm rollback nof-mp 0`; first-revision releases have no previous Helm revision.
+
+If Task Tracker domain cutover is rejected before `nof-tt` deployment, restore these backups:
+
+1. VPS Caddy: `/etc/caddy/Caddyfile.backup-20260605T2134Z`, then `sudo caddy validate --config /etc/caddy/Caddyfile` and `sudo systemctl reload caddy`.
+2. hbl portal-gateway: `/home/nofadminhbl/portal-gateway-configmap.backup-20260605T2134Z.yaml`, then restart and wait for `deployment/portal-gateway`.
 
 ## Stop Conditions
 
