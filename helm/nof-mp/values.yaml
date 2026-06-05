@@ -1,0 +1,63 @@
+replicaCount: 1
+
+image:
+  repository: localhost:32000/nof-mp
+  pullPolicy: Always
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3000
+  nodePort: null
+
+env:
+  NODE_ENV: "production"
+  NEXT_TELEMETRY_DISABLED: "1"
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  DB_SERVER: "postgres"
+  DB_PORT: "5432"
+  FORGE_TASKS_DB_SCHEMA: "forge_tasks"
+  NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
+  NEXT_PUBLIC_NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
+  NOF_PLATFORM_OAUTH_ISSUER: "https://forgath.ru"
+
+secretEnv:
+  DB_USER:
+    secretName: postgres-secret
+    key: postgres-user
+  DB_PASS:
+    secretName: postgres-secret
+    key: postgres-password
+  DB_NAME:
+    secretName: postgres-secret
+    key: postgres-db
+  SECRET_KEY:
+    secretName: dragon-forge-secrets
+    key: SECRET_KEY
+  BOT_API_KEY:
+    secretName: bot-secrets
+    key: bot-api-key
+  NOF_PLATFORM_OAUTH_JWT_SECRET:
+    secretName: nof-mp-oauth-secrets
+    key: NOF_PLATFORM_OAUTH_JWT_SECRET
+  NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_TT:
+    secretName: nof-mp-oauth-secrets
+    key: NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_TT
+  NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_HT:
+    secretName: nof-mp-oauth-secrets
+    key: NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_HT
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
