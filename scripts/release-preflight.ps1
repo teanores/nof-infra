@@ -44,7 +44,7 @@ if (!$row) {
   Fail "Service '$Service' is missing from $desiredStatePath"
 }
 if ($row.Ref -ne $ExpectedRef) {
-  Fail "Desired-state ref mismatch for $Service: expected '$ExpectedRef', got '$($row.Ref)'"
+  Fail "Desired-state ref mismatch for ${Service}: expected '$ExpectedRef', got '$($row.Ref)'"
 }
 if ($row.Enabled -ne "false") {
   Fail "Expected $Service enabled=false before owner-approved production deploy, got '$($row.Enabled)'"
