@@ -7,6 +7,7 @@ This repository stores infrastructure definitions and runbooks that are not serv
 - Kubernetes and Helm definitions;
 - release-builder and deploy automation definitions;
 - hbl deployment discovery and desired-state;
+- hbl edge target state for VPS Caddy and portal-gateway;
 - local, hbl and future environment runbooks;
 - migration plans for service keys, images, releases and public hostnames.
 

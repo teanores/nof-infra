@@ -1,0 +1,17 @@
+# Target public edge state for the NOF hbl environment.
+#
+# This file is intentionally secret-free. It is not applied automatically.
+# Before applying, compare it with /etc/caddy/Caddyfile on the VPS and keep a
+# timestamped backup.
+
+forgath.ru {
+	reverse_proxy 192.168.1.51:30500
+}
+
+task-tracker.forgath.ru {
+	reverse_proxy 192.168.1.51:30500
+}
+
+habit-tracker.forgath.ru {
+	reverse_proxy 192.168.1.51:30500
+}
