@@ -9,6 +9,7 @@ Purpose: prepare the NOF OAuth release without running production changes until 
 - `nof-tt` and `nof-ht` use standard OAuth login with `nof-mp`.
 - Legacy product exchange does not create synthetic cross-service users.
 - Public Task Tracker URL is `https://task-tracker.forgath.ru`.
+- `forge-tasks.forgath.ru` is historical/rollback-only after the Task Tracker hostname cutover.
 
 ## Pre-Release Gates
 
@@ -23,9 +24,11 @@ Purpose: prepare the NOF OAuth release without running production changes until 
 - Any secret value appears in logs, terminal output, docs or commits.
 - OAuth creates a synthetic user instead of redirecting to login/registration.
 - Existing service session overrides platform identity across products.
-- `forge-tasks.forgath.ru` remains active after accepted hard cutover unless owner explicitly changes the decision.
+- `forge-tasks.forgath.ru` remains active as a live public hostname after the Task Tracker cutover.
 - Helm/image/release-builder keys use display names instead of service keys.
 
 ## Rollback Notes
 
-Rollback commands must be filled after hbl discovery confirms the current Helm release names and deployment mechanism.
+The current hbl/VPS hostname rollback backups are recorded in `docs/runbooks/portal-gateway-declarative-state.md`.
+
+Do not keep `forge-tasks.forgath.ru` as a compatibility hostname after accepted UAT. Owner confirmed there are no active external users for this legacy host.
