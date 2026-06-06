@@ -22,6 +22,7 @@ Use `-SkipBuilds` only for a quick metadata check. Do not use skipped builds as 
 ## Checks
 
 - `nof-mp`, `nof-tt` and `nof-infra` working trees are clean before checks.
+- `nof-mp`, `nof-tt` and `nof-infra` are synchronized with their upstream branches before checks.
 - Current branch, HEAD and upstream are recorded for each repository.
 - `nof-mp` runs `npm run check` and `npm run build`.
 - `nof-tt` runs `npm run check` and `npm run build`.

@@ -43,6 +43,18 @@ function AssertCleanRepo($Name, $Repo) {
   }
 }
 
+function AssertSyncedRepo($Name, $Repo) {
+  $upstream = GitValue $Repo @("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
+  $counts = GitValue $Repo @("rev-list", "--left-right", "--count", "$upstream...HEAD")
+  $parts = $counts -split "\s+"
+  $behind = [int]$parts[0]
+  $ahead = [int]$parts[1]
+
+  if ($behind -ne 0 -or $ahead -ne 0) {
+    Fail "$Name is not synchronized with $upstream (behind=$behind ahead=$ahead)"
+  }
+}
+
 function RepoSummary($Name, $Repo) {
   [pscustomobject]@{
     Name = $Name
@@ -61,6 +73,9 @@ $nofInfra = $repoRoot.Path
 AssertCleanRepo "nof-mp" $nofMp
 AssertCleanRepo "nof-tt" $nofTt
 AssertCleanRepo "nof-infra" $nofInfra
+AssertSyncedRepo "nof-mp" $nofMp
+AssertSyncedRepo "nof-tt" $nofTt
+AssertSyncedRepo "nof-infra" $nofInfra
 
 $summaries = @(
   (RepoSummary "nof-mp" $nofMp),
@@ -108,6 +123,7 @@ $lines += @(
   "## Checks",
   "",
   "- Working trees clean before checks.",
+  "- Repositories synchronized with their upstream branches before checks.",
   "- nof-mp check/build: $(if ($SkipBuilds) { "skipped" } else { "passed" })",
   "- nof-tt check/build: $(if ($SkipBuilds) { "skipped" } else { "passed" })",
   "- nof-infra release preflight: passed.",
