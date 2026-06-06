@@ -17,12 +17,19 @@ From `nof-infra`:
 .\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.0 -Environment hbl
 ```
 
+After the owner explicitly approves a production deploy window and the desired-state row is intentionally enabled, run:
+
+```powershell
+.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.0 -Environment hbl -ApprovedProductionDeploy
+```
+
 ## Checks
 
 - nof-infra working tree is clean.
 - `environments/hbl/desired-state.tsv` contains the expected service row.
 - The service release ref matches the expected release ref.
 - The service remains `enabled=false` before owner-approved production deploy.
+- The service is `enabled=true` only when `-ApprovedProductionDeploy` is passed after owner approval.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
 - Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.

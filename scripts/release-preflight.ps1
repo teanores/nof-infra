@@ -1,7 +1,8 @@
 param(
   [string] $Service = "nof-tt",
   [string] $ExpectedRef = "v0.2.0",
-  [string] $Environment = "hbl"
+  [string] $Environment = "hbl",
+  [switch] $ApprovedProductionDeploy
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,7 +47,11 @@ if (!$row) {
 if ($row.Ref -ne $ExpectedRef) {
   Fail "Desired-state ref mismatch for ${Service}: expected '$ExpectedRef', got '$($row.Ref)'"
 }
-if ($row.Enabled -ne "false") {
+$expectedEnabled = if ($ApprovedProductionDeploy) { "true" } else { "false" }
+if ($row.Enabled -ne $expectedEnabled) {
+  if ($ApprovedProductionDeploy) {
+    Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
+  }
   Fail "Expected $Service enabled=false before owner-approved production deploy, got '$($row.Enabled)'"
 }
 
