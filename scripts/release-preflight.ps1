@@ -74,6 +74,33 @@ foreach ($marker in $secretMarkers) {
   }
 }
 
+$liveInfraRoots = @(
+  (Join-Path $repoRoot "helm"),
+  (Join-Path $repoRoot "release-builder"),
+  (Join-Path $repoRoot "environments\$Environment")
+) | Where-Object { Test-Path $_ }
+
+$liveInfraText = $liveInfraRoots |
+  ForEach-Object { Get-ChildItem -Path $_ -Recurse -File } |
+  ForEach-Object { Get-Content $_.FullName }
+
+$forbiddenLegacyRuntimeNames = @(
+  "FORGE_TASKS_DATABASE_URL",
+  "FORGE_TASKS_DB_SCHEMA",
+  "FORGE_TASKS_MCP_TOKEN_SECRET",
+  "localhost:32000/forge-tasks",
+  "RELEASE_NAME=`"forge-tasks`"",
+  "SERVICE_NAME=`"forge-tasks`"",
+  "name: forge-tasks",
+  "app.kubernetes.io/name: forge-tasks"
+)
+foreach ($name in $forbiddenLegacyRuntimeNames) {
+  if ($liveInfraText -match [regex]::Escape($name)) {
+    Fail "Forbidden legacy live infra identifier found: $name"
+  }
+}
+
 Info "desired-state: $Service -> $ExpectedRef enabled=$($row.Enabled)"
 Info "edge targets: no forbidden legacy live hostnames or secret-looking markers found"
+Info "live infra targets: no forbidden legacy runtime identifiers found"
 Info "preflight completed locally; no hbl/VPS/production commands were run"

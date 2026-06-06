@@ -25,6 +25,8 @@ From `nof-infra`:
 - The service remains `enabled=false` before owner-approved production deploy.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
+- Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.
+- Live infra target files do not contain legacy `forge-tasks` Helm release, image, service or app label identifiers.
 
 ## Stop Conditions
 
@@ -32,6 +34,8 @@ From `nof-infra`:
 - Desired-state uses a branch name for a production release candidate.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.
+- A live infra target file reintroduces `FORGE_TASKS_DATABASE_URL`, `FORGE_TASKS_DB_SCHEMA` or `FORGE_TASKS_MCP_TOKEN_SECRET`.
+- A live infra target file reintroduces `localhost:32000/forge-tasks`, Helm release `forge-tasks`, service name `forge-tasks` or app label `forge-tasks`.
 - Owner has not approved production action in the current conversation.
 
 ## Limits
