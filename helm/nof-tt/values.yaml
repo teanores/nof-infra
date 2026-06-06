@@ -17,7 +17,7 @@ env:
   HOSTNAME: "0.0.0.0"
   DB_SERVER: "postgres"
   DB_PORT: "5432"
-  FORGE_TASKS_DB_SCHEMA: "forge_tasks"
+  NOF_TT_DB_SCHEMA: "forge_tasks"
   NOF_PLATFORM_ORIGIN: "https://forgath.ru"
   NEXT_PUBLIC_PLATFORM_ORIGIN: "https://forgath.ru"
   NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
