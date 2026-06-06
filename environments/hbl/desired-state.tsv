@@ -2,5 +2,5 @@
 # hbl release-builder desired state. Keep this file free of secrets.
 # Production rows should use release tags after local regression and owner approval.
 nof-mp	v0.2.0	true
-nof-tt	v0.2.1	true
+nof-tt	v0.2.2	true
 nof-ht	v1.33.44	false
