@@ -177,6 +177,7 @@ deploy_service() {
   local full_commit
   full_commit="$(git -C "$src_dir" rev-parse HEAD)"
   local image_tag="$commit"
+  local app_version="${ref#v}"
   local chart_path="$chart_dir/$CHART_SUBDIR"
   local dockerfile_path="$src_dir/$DOCKERFILE_SUBPATH"
   local context_path="$src_dir/$SOURCE_SUBDIR"
@@ -191,7 +192,12 @@ deploy_service() {
   fi
 
   echo "==> Building $IMAGE_REPOSITORY:$image_tag"
-  sudo docker build -t "$IMAGE_REPOSITORY:$image_tag" -t "$IMAGE_REPOSITORY:latest" -f "$dockerfile_path" "$context_path"
+  sudo docker build \
+    --build-arg "NEXT_PUBLIC_APP_VERSION=$app_version" \
+    -t "$IMAGE_REPOSITORY:$image_tag" \
+    -t "$IMAGE_REPOSITORY:latest" \
+    -f "$dockerfile_path" \
+    "$context_path"
   sudo docker push "$IMAGE_REPOSITORY:$image_tag"
   sudo docker push "$IMAGE_REPOSITORY:latest"
 
@@ -200,6 +206,7 @@ deploy_service() {
     --namespace "$NAMESPACE" \
     --set "image.repository=$IMAGE_REPOSITORY" \
     --set "image.tag=$image_tag" \
+    --set "env.NEXT_PUBLIC_APP_VERSION=$app_version" \
     --wait --timeout 180s
 
   sudo microk8s kubectl rollout status "deployment/$RELEASE_NAME" -n "$NAMESPACE" --timeout=180s
@@ -217,6 +224,7 @@ deploy_service() {
   {
     echo "service=$service"
     echo "ref=$ref"
+    echo "app_version=$app_version"
     echo "commit=$full_commit"
     echo "image=$IMAGE_REPOSITORY:$image_tag"
     echo "release=$RELEASE_NAME"
