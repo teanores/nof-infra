@@ -1,6 +1,6 @@
 # service	git-ref	enabled
 # hbl release-builder desired state. Keep this file free of secrets.
 # Production rows should use release tags after local regression and owner approval.
-nof-mp	v0.2.13	true
+nof-mp	v0.2.14	true
 nof-tt	v0.2.4	true
 nof-ht	v1.33.44	false
