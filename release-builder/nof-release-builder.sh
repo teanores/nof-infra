@@ -119,6 +119,26 @@ sanitize_ref() {
   fi
 }
 
+app_version_from_ref() {
+  local service="$1"
+  local ref="$2"
+  if [[ "$ref" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+    printf '%s\n' "${ref#v}"
+    return 0
+  fi
+
+  case "$service" in
+    nof-mp|nof-tt|nof-ht)
+      echo "ERROR: $service production deploys must use a semver tag ref such as v0.2.13. Raw commit refs would leak into NEXT_PUBLIC_APP_VERSION." >&2
+      exit 64
+      ;;
+    *)
+      echo "ERROR: cannot derive app version for $service from ref '$ref'." >&2
+      exit 64
+      ;;
+  esac
+}
+
 prepare_repo() {
   local url="$1"
   local ref="$2"
@@ -177,7 +197,8 @@ deploy_service() {
   local full_commit
   full_commit="$(git -C "$src_dir" rev-parse HEAD)"
   local image_tag="$commit"
-  local app_version="${ref#v}"
+  local app_version
+  app_version="$(app_version_from_ref "$service" "$ref")"
   local chart_path="$chart_dir/$CHART_SUBDIR"
   local dockerfile_path="$src_dir/$DOCKERFILE_SUBPATH"
   local context_path="$src_dir/$SOURCE_SUBDIR"
@@ -223,7 +244,7 @@ deploy_service() {
 
   {
     echo "service=$service"
-    echo "ref=$ref"
+    echo "source_ref=$ref"
     echo "app_version=$app_version"
     echo "commit=$full_commit"
     echo "image=$IMAGE_REPOSITORY:$image_tag"
@@ -316,4 +337,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${NOF_RELEASE_BUILDER_SOURCE_ONLY:-}" != "1" ]]; then
+  main "$@"
+fi

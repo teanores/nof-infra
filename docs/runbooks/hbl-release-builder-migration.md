@@ -22,7 +22,7 @@ Local `nof-infra` state after bootstrap:
 - release-builder script default control repo is `https://github.com/teanores/nof-infra.git`;
 - default control manifest is `environments/hbl/desired-state.tsv`;
 - supported release-builder service keys are `nof-mp`, `nof-tt`, `nof-ht`;
-- `nof-mp` desired-state row is enabled at `v0.2.0`;
+- `nof-mp` desired-state row is enabled at `v0.2.13`;
 - `nof-tt` and `nof-ht` desired-state rows remain disabled until owner approval and service UAT.
 
 Use read-only hbl discovery before changing any hbl service, timer, Helm release or Kubernetes object. The local repository state is not proof that the hbl host has the same script installed.
@@ -40,6 +40,18 @@ Use read-only hbl discovery before changing any hbl service, timer, Helm release
 ## Owner Approval Required
 
 Do not run these steps without explicit owner approval in the current conversation.
+
+## Release Version Policy
+
+User-facing production deploys for `nof-mp`, `nof-tt` and `nof-ht` must use semver tag refs such as `v0.2.13`.
+
+Do not deploy these services with raw commit refs. The release-builder passes `NEXT_PUBLIC_APP_VERSION` into the Docker build and Helm env from the release ref; a raw commit ref would become a public UI marker such as `v12ebee4`, which is invalid for NOF releases.
+
+Evidence must keep the source ref and the public app version separate:
+
+- `source_ref=<git tag ref>`;
+- `app_version=<semver without leading v>`;
+- `commit=<full commit sha>`.
 
 ## Proposed Migration Steps
 
