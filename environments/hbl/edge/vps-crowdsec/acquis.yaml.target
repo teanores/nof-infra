@@ -1,0 +1,15 @@
+# NOF VPS CrowdSec acquisition target.
+# Apply only on the VPS with root/sudo approval.
+#
+# First phase is observe-only: install CrowdSec engine and collections, but do
+# not install or enable any bouncer/blocking integration.
+
+filenames:
+  - /var/log/caddy/forgath-access.log
+labels:
+  type: caddy
+---
+filenames:
+  - /var/log/auth.log
+labels:
+  type: syslog
