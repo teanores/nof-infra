@@ -50,6 +50,9 @@ secretEnv:
   NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_HT:
     secretName: nof-mp-oauth-secrets
     key: NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_HT
+  NOF_SECURITY_AUDIT_INGEST_TOKEN:
+    secretName: nof-mp-security-audit
+    key: edge-ingest-token
 
 resources:
   limits:

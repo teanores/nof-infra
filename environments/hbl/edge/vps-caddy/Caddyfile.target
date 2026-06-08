@@ -4,14 +4,28 @@
 # Before applying, compare it with /etc/caddy/Caddyfile on the VPS and keep a
 # timestamped backup.
 
+(nof_edge_access_log) {
+	log {
+		output file /var/log/caddy/nof-edge-access.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 168h
+		}
+		format json
+	}
+}
+
 forgath.ru {
+	import nof_edge_access_log
 	reverse_proxy 192.168.1.51:30500
 }
 
 task-tracker.forgath.ru {
+	import nof_edge_access_log
 	reverse_proxy 192.168.1.51:30500
 }
 
 habit-tracker.forgath.ru {
+	import nof_edge_access_log
 	reverse_proxy 192.168.1.51:30500
 }
