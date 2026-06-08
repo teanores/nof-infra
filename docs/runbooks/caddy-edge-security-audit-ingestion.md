@@ -14,7 +14,7 @@ This complements application audit events emitted by nof-mp itself. It is not a 
 - nof-mp hidden ingest endpoint: `https://forgath.ru/api/admin/security/edge-events`
 - Kubernetes secret: `nof-mp-security-audit`
 - Kubernetes env var in nof-mp pod: `NOF_SECURITY_AUDIT_INGEST_TOKEN`
-- VPS Caddy JSON access log: `/var/log/caddy/nof-edge-access.log`
+- VPS Caddy JSON access log: `/var/log/caddy/forgath-access.log`
 - VPS collector script: `/usr/local/bin/nof-ship-caddy-security-audit`
 - VPS collector state: `/var/lib/nof-edge-audit/offset`
 - systemd service/timer: `nof-edge-audit-shipper.service` / `nof-edge-audit-shipper.timer`
@@ -35,8 +35,21 @@ This complements application audit events emitted by nof-mp itself. It is not a 
   - `NOF_SECURITY_AUDIT_INGEST_TOKEN`
   - from secret `nof-mp-security-audit`
   - key `edge-ingest-token`
-- `environments/hbl/edge/vps-caddy/Caddyfile.target` writes JSON access logs to `/var/log/caddy/nof-edge-access.log`.
+- `environments/hbl/edge/vps-caddy/Caddyfile.target` mirrors the current VPS Caddy shape: TLS edge proxies to `127.0.0.1:18080`, the hbl reverse tunnel forwards that to `portal-gateway`, and Caddy writes filtered JSON access logs to `/var/log/caddy/forgath-access.log`.
 - `scripts/ship-caddy-security-audit.sh` ships only new log bytes to the nof-mp ingest endpoint and records an offset.
+
+## Read-Only Discovery Notes
+
+Observed on 2026-06-08:
+
+- hbl service `nof-tunnel-hbl-vps.service` maintains a reverse SSH tunnel to `noftunnelhblvps@176.12.67.92`.
+- VPS host name: `forgath.ru`.
+- VPS Caddy binary: `/usr/bin/caddy`.
+- VPS Caddyfile: `/etc/caddy/Caddyfile`.
+- Public ports on VPS: 80/443; tunnel port listens on `127.0.0.1:18080`.
+- Existing access log: `/var/log/caddy/forgath-access.log`, owner `caddy:caddy`, mode `0640`.
+- Existing log filter removes `Authorization`, `Cookie`, `X-Api-Key`, `X-Telegram-Bot-Api-Secret-Token` and `Set-Cookie`.
+- The tunnel user can connect and read the world-readable Caddyfile, but it cannot read Caddy logs or run sudo. Installing the shipper requires a root-capable maintenance step on the VPS.
 
 ## Production Apply Plan
 
@@ -63,37 +76,51 @@ Do not run without owner approval in the current conversation.
      'printenv | grep "^NOF_SECURITY_AUDIT_INGEST_TOKEN=" >/dev/null && echo ingest_token=SET || echo ingest_token=MISSING'
    ```
 
-4. Backup VPS Caddyfile:
+4. Confirm VPS Caddyfile still matches the repository target or intentionally record the delta.
+
+   Do not apply the target if it would remove unknown live hostnames or tunnel ports.
+
+5. Backup VPS Caddyfile before any Caddy change:
 
    ```bash
    sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.backup-$(date -u +%Y%m%dT%H%M%SZ)
    ```
 
-5. Apply the Caddy target, validate and reload:
+6. Validate Caddy as a user that can write the configured Caddy logs, usually root or caddy:
 
    ```bash
    sudo caddy validate --config /etc/caddy/Caddyfile
+   ```
+
+7. Reload Caddy only if the config actually changed:
+
+   ```bash
    sudo systemctl reload caddy
    ```
 
-6. Install collector script:
+8. Install collector script:
 
    ```bash
    sudo install -m 0755 scripts/ship-caddy-security-audit.sh /usr/local/bin/nof-ship-caddy-security-audit
    ```
 
-7. Create `/etc/nof-edge-audit.env` with token reference out of band. Do not write values to tracker, Wiki or chat.
+9. Create `/etc/nof-edge-audit.env` with token reference out of band. Do not write values to tracker, Wiki or chat.
 
    Required names:
 
    ```text
    NOF_EDGE_AUDIT_TOKEN=<secret value>
    NOF_EDGE_AUDIT_ENDPOINT=https://forgath.ru/api/admin/security/edge-events
-   NOF_EDGE_AUDIT_LOG_FILE=/var/log/caddy/nof-edge-access.log
+   NOF_EDGE_AUDIT_LOG_FILE=/var/log/caddy/forgath-access.log
    NOF_EDGE_AUDIT_STATE_FILE=/var/lib/nof-edge-audit/offset
    ```
 
-8. Install systemd service and timer.
+10. Install systemd service and timer.
+
+   The service user must be able to read `/var/log/caddy/forgath-access.log` without broadening public permissions. Preferred options:
+
+   - run the oneshot shipper as `root` with `NoNewPrivileges=true`, `ProtectSystem=strict` and read/write path exceptions;
+   - or create a dedicated `nof-edge-audit` user and grant it read access through the `caddy` group or ACL.
 
    ```ini
    [Unit]
@@ -101,8 +128,15 @@ Do not run without owner approval in the current conversation.
 
    [Service]
    Type=oneshot
+   User=root
    EnvironmentFile=/etc/nof-edge-audit.env
    ExecStart=/usr/local/bin/nof-ship-caddy-security-audit
+   NoNewPrivileges=true
+   PrivateTmp=true
+   ProtectHome=true
+   ProtectSystem=strict
+   ReadOnlyPaths=/var/log/caddy
+   ReadWritePaths=/var/lib/nof-edge-audit
    ```
 
    ```ini
@@ -118,7 +152,7 @@ Do not run without owner approval in the current conversation.
    WantedBy=timers.target
    ```
 
-9. Enable timer:
+11. Enable timer:
 
    ```bash
    sudo systemctl daemon-reload

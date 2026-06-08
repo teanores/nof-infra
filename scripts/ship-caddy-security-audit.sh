@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_FILE="${NOF_EDGE_AUDIT_LOG_FILE:-/var/log/caddy/nof-edge-access.log}"
+LOG_FILE="${NOF_EDGE_AUDIT_LOG_FILE:-/var/log/caddy/forgath-access.log}"
 STATE_FILE="${NOF_EDGE_AUDIT_STATE_FILE:-/var/lib/nof-edge-audit/offset}"
 ENDPOINT="${NOF_EDGE_AUDIT_ENDPOINT:-https://forgath.ru/api/admin/security/edge-events}"
 TOKEN="${NOF_EDGE_AUDIT_TOKEN:-}"
