@@ -33,11 +33,33 @@ Current target script defaults:
 
 Historical hbl state may still include legacy service names such as `nof-platform` and `forge-tasks`. Treat those names as migration inventory only unless a rollback runbook explicitly says otherwise.
 
+## Current Flow Inventory - 2026-06-09
+
+Current production delivery is a hybrid and must be treated as technical debt until an explicit architecture decision is accepted.
+
+| Service | Current deploy trigger | Local workflow file | hbl mechanism | Status |
+| --- | --- | --- | --- | --- |
+| `nof-ht` | GitHub push to `main` | `nof-ht/.github/workflows/deploy.yml` | self-hosted runner `actions.runner.teanores-nof-ht.hbl-runner.service` | Works as the most automated path, but runner backoff can block delivery |
+| `nof-mp` | Owner-approved manual tag deploy | none | `/opt/nof-release-builder/nof-release-builder.sh deploy nof-mp <tag>` | Reliable when manually invoked; not GitHub Actions driven |
+| `nof-tt` | Owner-approved manual tag deploy | none | `/opt/nof-release-builder/nof-release-builder.sh deploy nof-tt <tag>` | Supported by release-builder; runtime still has legacy `forge-tasks` cleanup debt |
+
+Additional hbl state:
+
+- `nof-release-builder-sync.timer` runs every 5 minutes and calls `nof-release-builder-sync.service`.
+- The release-builder supports service keys `nof-mp`, `nof-tt` and `nof-ht`.
+- `nof-ht` GitHub Actions and release-builder both exist today, so the authoritative deployment path is not yet singular.
+
+Until the standard is finalized, agents must state which path they are using before any release-bound action:
+
+- GitHub Actions runner path for `nof-ht`;
+- scoped release-builder path for `nof-mp` and `nof-tt`;
+- no broad multi-service sync unless every enabled service is explicitly approved in the current conversation.
+
 ## Discovery Questions
 
 - What currently receives GitHub merge/tag/release events?
 - Is the deploy component a GitHub Actions runner, webhook receiver, cron, systemd unit, Kubernetes job or manual script?
-- Which component is authoritative after migration: GitHub Actions runner, hbl timer or both?
+- Which component is authoritative after migration: GitHub Actions runner, release-builder timer, manual scoped release-builder, or an explicit hybrid?
 - Which legacy Helm releases can be removed after accepted UAT?
 - Which secrets are required by name only, and which service owns each secret resource?
 - Which system users and database names must be renamed or preserved for rollback?
@@ -94,6 +116,9 @@ A release-builder change is acceptable only when:
 
 ## Open Cleanup
 
+- Create or activate the `nof-infra` tracker project; MCP currently rejects `projectKey: nof-infra`.
+- Decide the single NOF CI/CD standard before July 2026 beta: GitHub Actions for all services, release-builder desired-state for all services, or an explicit hybrid.
+- Add runner health, backoff recovery and owner-facing incident steps if GitHub Actions remains part of the standard.
 - Confirm whether the hbl GitHub Actions runner is still needed after the hbl timer release-builder flow is stable.
 - Rename remaining hbl systemd/unit documentation from legacy wording to NOF service keys after accepted UAT.
 - Decide database and system-user naming separately from this deployment ownership document.

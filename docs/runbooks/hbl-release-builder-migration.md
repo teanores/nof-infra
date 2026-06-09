@@ -17,6 +17,14 @@ Read-only discovery on 2026-06-05 found:
 - active legacy Helm releases: `nof-platform`, `forge-tasks`
 - active legacy images: `localhost:32000/nof-platform:*`, `localhost:32000/forge-tasks:*`
 
+Read-only follow-up on 2026-06-09 found:
+
+- `actions.runner.teanores-nof-ht.hbl-runner.service` is loaded, active and running.
+- `nof-release-builder-sync.timer` is active and triggers approximately every 5 minutes.
+- `nof-mp` and `nof-tt` repositories do not currently contain `.github/workflows`.
+- `nof-ht` contains `.github/workflows/deploy.yml` and deploys through the self-hosted runner on push to `main`.
+- `nof-mp` and `nof-tt` are deployed through scoped release-builder commands after explicit owner approval.
+
 Local `nof-infra` state after bootstrap:
 
 - release-builder script default control repo is `https://github.com/teanores/nof-infra.git`;
@@ -36,6 +44,28 @@ Use read-only hbl discovery before changing any hbl service, timer, Helm release
 - images: `localhost:32000/nof-mp:*`, `localhost:32000/nof-tt:*`, `localhost:32000/nof-ht:*`
 - public Task Tracker host: `task-tracker.forgath.ru`
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
+
+## CI/CD Standard Decision Needed
+
+The current hybrid is operational debt:
+
+- `nof-ht` uses GitHub Actions and can be blocked by runner disconnect/backoff.
+- `nof-mp` and `nof-tt` rely on manual scoped release-builder deploys.
+- `nof-release-builder-sync.timer` also exists, so agents must not assume a single authoritative path.
+
+Before July 2026 beta, choose one of these target models:
+
+1. GitHub Actions for all services.
+   - Pros: familiar push-driven CI/CD, service-local checks and logs.
+   - Required: workflows for `nof-mp` and `nof-tt`, runner health monitoring, documented restart/backoff recovery.
+2. `nof-infra` release-builder desired-state for all services.
+   - Pros: one deployment mechanism and one environment control manifest.
+   - Required: reliable sync timer, clear tag policy, evidence, rollback and local preflight for every service.
+3. Explicit hybrid.
+   - Pros: lowest migration cost today.
+   - Required: written rule for which service uses which path, and a stop condition when the paths disagree.
+
+Until this decision is accepted, production deploy requests must name the path explicitly.
 
 ## Owner Approval Required
 
@@ -74,6 +104,7 @@ Evidence must keep the source ref and the public app version separate:
 - Keep `nof-tt` disabled in desired-state until the owner approves a deploy window.
 - Keep post-UAT cleanup tasks linked to `MANUAL-C48428C1`, `MANUAL-2F20751D`, `MANUAL-43DB73A9` and `MANUAL-38757CBE`.
 - Prepare read-only command lists only; do not run hbl-changing commands without approval.
+- Track the missing `nof-infra` project in nof-tt MCP until the tracker can create `projectKey: nof-infra`.
 
 ## Stop Conditions
 
