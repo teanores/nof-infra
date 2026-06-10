@@ -1,0 +1,22 @@
+image:
+  repository: localhost:32000/nof-ht
+  tag: latest
+  pullPolicy: Always
+
+replicas: 1
+
+# nof-infra owns deployment shape. Secret values stay in Kubernetes secrets
+# nof-ht-secrets and nof-ht-oauth-secrets, never in this repository.
+nextauthUrl: "https://habit-tracker.forgath.ru"
+canonicalUrl: "https://habit-tracker.forgath.ru"
+telegramBotUsername: "test_elf_nof_bot"
+telegramBotId: "8750634200"
+appVersion: "1.33.51"
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"

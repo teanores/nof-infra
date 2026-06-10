@@ -101,8 +101,8 @@ service_config() {
       DOCKERFILE_SUBPATH="Dockerfile"
       IMAGE_REPOSITORY="localhost:32000/nof-ht"
       RELEASE_NAME="nof-ht"
-      CHART_REPO_URL="$REPO_URL"
-      CHART_SUBDIR="charts/nof-ht"
+      CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
+      CHART_SUBDIR="helm/nof-ht"
       ;;
     *)
       echo "ERROR: unknown service '$service'." >&2

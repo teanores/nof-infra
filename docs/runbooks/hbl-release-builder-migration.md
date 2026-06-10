@@ -54,6 +54,7 @@ Current read-only discovery on 2026-06-11:
 - images: `localhost:32000/nof-mp:*`, `localhost:32000/nof-tt:*`, `localhost:32000/nof-ht:*`
 - public Task Tracker host: `task-tracker.forgath.ru`
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
+- nof-ht chart source after migration: `nof-infra/helm/nof-ht`
 
 ## CI/CD Standard Decision
 
