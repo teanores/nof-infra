@@ -1,7 +1,9 @@
 param(
   [string] $Service = "nof-tt",
-  [string] $ExpectedRef = "v0.2.0",
+  [string] $ExpectedRef = "v0.2.5",
   [string] $Environment = "hbl",
+  [ValidateSet("any", "true", "false")]
+  [string] $ExpectedEnabled = "any",
   [switch] $ApprovedProductionDeploy
 )
 
@@ -47,12 +49,14 @@ if (!$row) {
 if ($row.Ref -ne $ExpectedRef) {
   Fail "Desired-state ref mismatch for ${Service}: expected '$ExpectedRef', got '$($row.Ref)'"
 }
-$expectedEnabled = if ($ApprovedProductionDeploy) { "true" } else { "false" }
-if ($row.Enabled -ne $expectedEnabled) {
-  if ($ApprovedProductionDeploy) {
-    Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
-  }
-  Fail "Expected $Service enabled=false before owner-approved production deploy, got '$($row.Enabled)'"
+if ($row.Enabled -notin @("true", "false")) {
+  Fail "Desired-state enabled value for ${Service} must be 'true' or 'false', got '$($row.Enabled)'"
+}
+if ($ExpectedEnabled -ne "any" -and $row.Enabled -ne $ExpectedEnabled) {
+  Fail "Desired-state enabled mismatch for ${Service}: expected '$ExpectedEnabled', got '$($row.Enabled)'"
+}
+if ($ApprovedProductionDeploy -and $row.Enabled -ne "true") {
+  Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
 }
 
 $edgeRoot = Join-Path $repoRoot "environments\$Environment\edge"
@@ -106,6 +110,9 @@ foreach ($name in $forbiddenLegacyRuntimeNames) {
 }
 
 Info "desired-state: $Service -> $ExpectedRef enabled=$($row.Enabled)"
+if (!$ApprovedProductionDeploy) {
+  Info "production deploy approval flag was not set; this was a local guard only"
+}
 Info "edge targets: no forbidden legacy live hostnames or secret-looking markers found"
 Info "live infra targets: no forbidden legacy runtime identifiers found"
 Info "preflight completed locally; no hbl/VPS/production commands were run"

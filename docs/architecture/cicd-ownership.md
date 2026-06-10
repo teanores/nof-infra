@@ -55,6 +55,18 @@ Until the standard is finalized, agents must state which path they are using bef
 - scoped release-builder path for `nof-mp` and `nof-tt`;
 - no broad multi-service sync unless every enabled service is explicitly approved in the current conversation.
 
+## Current Release Alignment - 2026-06-10
+
+Local service repository tags currently verified:
+
+| Service | Current tag | Desired-state row | Notes |
+| --- | --- | --- | --- |
+| `nof-mp` | `v0.2.17` | `v0.2.17`, enabled | Auth/compliance release accepted locally; any hbl sync still requires owner release approval. |
+| `nof-tt` | `v0.2.5` | `v0.2.5`, enabled | Telegram-auth cleanup release accepted locally; Task Tracker MCP endpoint remains `task-tracker.forgath.ru/api/mcp`. |
+| `nof-ht` | `v1.33.51` | `v1.33.51`, disabled | nof-ht uses GitHub Actions runner path today; release-builder row remains disabled until CI/CD standard decision. |
+
+Do not push desired-state changes to the control branch as a side effect of documentation work. A pushed enabled row can become production-bound if hbl sync is active.
+
 ## Discovery Questions
 
 - What currently receives GitHub merge/tag/release events?

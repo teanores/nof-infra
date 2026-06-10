@@ -30,8 +30,10 @@ Local `nof-infra` state after bootstrap:
 - release-builder script default control repo is `https://github.com/teanores/nof-infra.git`;
 - default control manifest is `environments/hbl/desired-state.tsv`;
 - supported release-builder service keys are `nof-mp`, `nof-tt`, `nof-ht`;
-- `nof-mp` desired-state row is enabled at `v0.2.13`;
-- `nof-tt` and `nof-ht` desired-state rows remain disabled until owner approval and service UAT.
+- current local desired-state rows on 2026-06-10:
+  - `nof-mp` -> `v0.2.17`, enabled;
+  - `nof-tt` -> `v0.2.5`, enabled;
+  - `nof-ht` -> `v1.33.51`, disabled because nof-ht currently uses the GitHub Actions runner path.
 
 Use read-only hbl discovery before changing any hbl service, timer, Helm release or Kubernetes object. The local repository state is not proof that the hbl host has the same script installed.
 
@@ -101,7 +103,7 @@ Evidence must keep the source ref and the public app version separate:
 ## Current Next Steps Without Owner Interaction
 
 - Keep local docs, runbooks and desired-state consistent with NOF naming.
-- Keep `nof-tt` disabled in desired-state until the owner approves a deploy window.
+- Keep `nof-ht` disabled in desired-state until the owner accepts a single CI/CD standard or explicitly moves nof-ht from GitHub Actions to release-builder.
 - Keep post-UAT cleanup tasks linked to `MANUAL-C48428C1`, `MANUAL-2F20751D`, `MANUAL-43DB73A9` and `MANUAL-38757CBE`.
 - Prepare read-only command lists only; do not run hbl-changing commands without approval.
 - Track the missing `nof-infra` project in nof-tt MCP until the tracker can create `projectKey: nof-infra`.

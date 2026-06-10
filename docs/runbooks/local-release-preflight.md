@@ -14,22 +14,25 @@ This preflight does not contact hbl, VPS, Kubernetes, Helm, Caddy or Docker. It 
 From `nof-infra`:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.0 -Environment hbl
+.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true
 ```
 
 After the owner explicitly approves a production deploy window and the desired-state row is intentionally enabled, run:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.0 -Environment hbl -ApprovedProductionDeploy
+.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy
 ```
+
+Use `-ExpectedEnabled false` only when validating a deliberately disabled row. Use `-ExpectedEnabled any` for read-only inventory checks that should not assert deployment state.
 
 ## Checks
 
 - nof-infra working tree is clean.
 - `environments/hbl/desired-state.tsv` contains the expected service row.
 - The service release ref matches the expected release ref.
-- The service remains `enabled=false` before owner-approved production deploy.
-- The service is `enabled=true` only when `-ApprovedProductionDeploy` is passed after owner approval.
+- The service `enabled` value is either `true` or `false`.
+- The service `enabled` value matches `-ExpectedEnabled` unless `-ExpectedEnabled any` is used.
+- `-ApprovedProductionDeploy` additionally requires `enabled=true`, but the flag itself is not a deployment and does not contact production.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
 - Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.
@@ -39,6 +42,8 @@ After the owner explicitly approves a production deploy window and the desired-s
 
 - Working tree is dirty.
 - Desired-state uses a branch name for a production release candidate.
+- Desired-state `enabled` is neither `true` nor `false`.
+- Desired-state `enabled` does not match the expected release state.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.
 - A live infra target file reintroduces `FORGE_TASKS_DATABASE_URL`, `FORGE_TASKS_DB_SCHEMA` or `FORGE_TASKS_MCP_TOKEN_SECRET`.

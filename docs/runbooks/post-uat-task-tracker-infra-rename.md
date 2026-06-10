@@ -3,7 +3,7 @@
 Status: prepared; do not execute before accepted owner UAT.
 Date: 2026-06-06.
 
-Purpose: finish the Task Tracker infrastructure rename after `nof-tt` v0.2.0 is deployed and accepted by the owner.
+Purpose: finish the Task Tracker infrastructure rename after the current accepted `nof-tt` release is deployed and accepted by the owner.
 
 This runbook is a checklist only. Production and hbl changes require explicit owner approval in the current conversation.
 
@@ -64,8 +64,8 @@ Expected after nof-tt deployment:
 Run only after explicit owner approval.
 
 1. Confirm `environments/hbl/desired-state.tsv` uses:
-   - `nof-tt<TAB>v0.2.0<TAB>true` during release window;
-   - or the current accepted nof-tt release tag after promotion.
+   - `nof-tt<TAB>v0.2.5<TAB>true` for the current accepted Task Tracker release;
+   - or the current accepted nof-tt release tag after the next promotion.
 2. Confirm `release-builder/nof-release-builder.sh list` shows `nof-tt`.
 3. Confirm `helm/nof-tt` renders with:
    - image repository `localhost:32000/nof-tt`;
@@ -96,7 +96,7 @@ Stop immediately if:
 After cleanup, run local preflight before pushing nof-infra changes:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.0 -Environment hbl
+.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -ExpectedEnabled true -Environment hbl
 ```
 
 Expected:

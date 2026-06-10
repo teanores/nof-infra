@@ -1,6 +1,8 @@
 param(
-  [string] $ExpectedNofTtRef = "v0.2.0",
+  [string] $ExpectedNofTtRef = "v0.2.5",
   [string] $Environment = "hbl",
+  [ValidateSet("any", "true", "false")]
+  [string] $ExpectedNofTtEnabled = "true",
   [switch] $SkipBuilds
 )
 
@@ -92,7 +94,7 @@ if (!$SkipBuilds) {
   Info "build/check steps skipped by request"
 }
 
-RunStep "nof-infra release preflight" ".\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef $ExpectedNofTtRef -Environment $Environment" $nofInfra
+RunStep "nof-infra release preflight" ".\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef $ExpectedNofTtRef -Environment $Environment -ExpectedEnabled $ExpectedNofTtEnabled" $nofInfra
 
 $reportDir = Join-Path $repoRoot "reports"
 New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
@@ -105,6 +107,7 @@ $lines = @(
   "Status: passed.",
   "Environment: $Environment.",
   "Expected nof-tt ref: $ExpectedNofTtRef.",
+  "Expected nof-tt enabled state: $ExpectedNofTtEnabled.",
   "Production actions: none.",
   "Secret values: not read or printed.",
   "",
