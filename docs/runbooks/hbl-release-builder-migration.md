@@ -43,6 +43,7 @@ Current read-only discovery on 2026-06-11:
 - `nof-release-builder-sync.timer` is active and calls `/opt/nof-release-builder/nof-release-builder.sh sync main` every 5 minutes.
 - No checked-out `environments/hbl/desired-state.tsv` file was found under `/opt/nof-release-builder` or `/home/nofadminhbl/nof-release-builder`; the timer may create/use a transient checkout during sync.
 - Live Helm still includes legacy releases `nof-platform` and `forge-tasks` alongside canonical `nof-mp` and `nof-tt`; treat legacy release cleanup as a separate post-UAT task.
+- nof-ht GitHub Actions runner health and recovery are documented in `hbl-github-actions-runner-health.md`.
 
 ## Target State
 

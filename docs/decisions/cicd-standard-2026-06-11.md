@@ -53,6 +53,7 @@ Until it is migrated:
 - no broad desired-state sync may deploy `nof-ht`;
 - nof-ht release requests must explicitly say they use the legacy GitHub Actions runner path;
 - runner health/backoff recovery must be documented.
+- nof-ht runner health checks must follow `../runbooks/hbl-github-actions-runner-health.md`.
 
 The target state is to move `nof-ht` production deployment to the same release-builder standard as `nof-mp` and `nof-tt`.
 
