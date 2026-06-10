@@ -20,7 +20,7 @@ From `nof-infra`:
 After the owner explicitly approves a production deploy window and the desired-state row is intentionally enabled, run:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy
+.\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-tt
 ```
 
 Use `-ExpectedEnabled false` only when validating a deliberately disabled row. Use `-ExpectedEnabled any` for read-only inventory checks that should not assert deployment state.
@@ -33,6 +33,7 @@ Use `-ExpectedEnabled false` only when validating a deliberately disabled row. U
 - The service `enabled` value is either `true` or `false`.
 - The service `enabled` value matches `-ExpectedEnabled` unless `-ExpectedEnabled any` is used.
 - `-ApprovedProductionDeploy` additionally requires `enabled=true`, but the flag itself is not a deployment and does not contact production.
+- `-ApprovedProductionDeploy` requires `-ApprovedServices` and fails if desired-state contains enabled services outside that explicit approval list.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
 - Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.
@@ -44,6 +45,8 @@ Use `-ExpectedEnabled false` only when validating a deliberately disabled row. U
 - Desired-state uses a branch name for a production release candidate.
 - Desired-state `enabled` is neither `true` nor `false`.
 - Desired-state `enabled` does not match the expected release state.
+- Production deploy mode is used without `-ApprovedServices`.
+- Desired-state contains enabled services outside the owner-approved release window.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.
 - A live infra target file reintroduces `FORGE_TASKS_DATABASE_URL`, `FORGE_TASKS_DB_SCHEMA` or `FORGE_TASKS_MCP_TOKEN_SECRET`.

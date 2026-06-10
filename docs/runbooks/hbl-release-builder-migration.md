@@ -37,6 +37,13 @@ Local `nof-infra` state after bootstrap:
 
 Use read-only hbl discovery before changing any hbl service, timer, Helm release or Kubernetes object. The local repository state is not proof that the hbl host has the same script installed.
 
+Current read-only discovery on 2026-06-11:
+
+- `/opt/nof-release-builder/nof-release-builder.sh list` returns `nof-mp`, `nof-tt`, `nof-ht`.
+- `nof-release-builder-sync.timer` is active and calls `/opt/nof-release-builder/nof-release-builder.sh sync main` every 5 minutes.
+- No checked-out `environments/hbl/desired-state.tsv` file was found under `/opt/nof-release-builder` or `/home/nofadminhbl/nof-release-builder`; the timer may create/use a transient checkout during sync.
+- Live Helm still includes legacy releases `nof-platform` and `forge-tasks` alongside canonical `nof-mp` and `nof-tt`; treat legacy release cleanup as a separate post-UAT task.
+
 ## Target State
 
 - control repo: `https://github.com/teanores/nof-infra.git`
@@ -108,6 +115,7 @@ Evidence must keep the source ref and the public app version separate:
 - The script cannot fetch `nof-infra`.
 - Chart path is missing.
 - Helm release render differs unexpectedly from current service config.
+- `nof-release-builder-sync.timer` is active and a desired-state push would enable services outside the explicit owner-approved release window.
 - Any secret value appears in logs or files.
 - OAuth flow creates synthetic users or reuses another product session.
 - A desired-state row would enable a production deploy before owner UAT approval.

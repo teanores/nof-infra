@@ -4,6 +4,7 @@ param(
   [string] $Environment = "hbl",
   [ValidateSet("any", "true", "false")]
   [string] $ExpectedEnabled = "any",
+  [string[]] $ApprovedServices = @(),
   [switch] $ApprovedProductionDeploy
 )
 
@@ -57,6 +58,23 @@ if ($ExpectedEnabled -ne "any" -and $row.Enabled -ne $ExpectedEnabled) {
 }
 if ($ApprovedProductionDeploy -and $row.Enabled -ne "true") {
   Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
+}
+if ($ApprovedProductionDeploy) {
+  if ($ApprovedServices.Count -eq 0) {
+    Fail "Approved production deploy mode requires -ApprovedServices to prevent accidental broad desired-state sync."
+  }
+  $normalizedApprovedServices = $ApprovedServices | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ }
+  if ($normalizedApprovedServices -notcontains $Service.ToLowerInvariant()) {
+    Fail "Service '$Service' is not listed in -ApprovedServices."
+  }
+
+  $unexpectedEnabledRows = $desiredRows |
+    Where-Object { $_.Enabled -eq "true" -and ($normalizedApprovedServices -notcontains $_.Service.ToLowerInvariant()) }
+
+  if ($unexpectedEnabledRows) {
+    $unexpected = ($unexpectedEnabledRows | ForEach-Object { "$($_.Service)=$($_.Ref)" }) -join ", "
+    Fail "Desired-state has enabled rows outside approved services: $unexpected"
+  }
 }
 
 $edgeRoot = Join-Path $repoRoot "environments\$Environment\edge"
