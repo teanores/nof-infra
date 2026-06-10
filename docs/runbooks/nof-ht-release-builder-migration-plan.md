@@ -18,6 +18,8 @@ nof-ht semver tag
 
 No production change is approved by this document.
 
+Migration safety standard: `docs/decisions/nof-ht-db-migration-release-standard-2026-06-11.md`.
+
 ## Current State
 
 `nof-ht` currently deploys through `nof-ht/.github/workflows/deploy.yml`:
@@ -46,7 +48,8 @@ Current nof-infra release-builder already knows service key `nof-ht`, but keeps 
 3. Migration execution:
    - target: no secret values printed or committed;
    - current GitHub Actions workflow reads `DATABASE_URL` into a shell variable;
-   - action: define a release-builder migration step or service-owned migration command that avoids printing secret values.
+   - current GitHub Actions workflow runs migrations after Helm rollout;
+   - action: define a release-builder migration gate that runs before Helm upgrade and avoids printing secret values.
 4. Rollback:
    - target: release-builder evidence records Helm revision and rollback command;
    - current workflow relies on GitHub Actions logs plus Helm state.
@@ -59,6 +62,8 @@ Current nof-infra release-builder already knows service key `nof-ht`, but keeps 
 2. Update release-builder `nof-ht` chart source from service repo chart to `nof-infra/helm/nof-ht`.
 3. Add or document a safe nof-ht migration execution path.
    - Safety runbook: `nof-ht-migration-secret-safety.md`.
+   - Release standard: `docs/decisions/nof-ht-db-migration-release-standard-2026-06-11.md`.
+   - Preferred target: one-shot Kubernetes Job using the approved nof-ht image tag, existing secret mounts and a service-owned migration command.
 4. Run local nof-infra preflight for:
    - `nof-ht v1.33.51 enabled=false`;
    - production-mode guard with nof-ht disabled.
@@ -78,7 +83,9 @@ Stop before deploy if:
 - nof-ht chart in nof-infra differs materially from the live chart and the diff is not understood;
 - nof-ht semver tag is not available locally and on origin;
 - migration step could print `DATABASE_URL` or other secret values;
-- release-builder does not run required nof-ht DB migrations for the approved release;
+- release-builder does not run required nof-ht DB migrations before Helm upgrade for the approved release;
+- migration job lacks a database advisory lock;
+- migration failure would still allow Helm upgrade;
 - release-builder preflight fails;
 - owner has not approved the nof-ht migration release window;
 - rollback target is unknown.
