@@ -1,9 +1,10 @@
 # CI/CD Ownership
 
-Status: draft, current working standard.
+Status: accepted working standard for June beta hardening.
 Owner: nof-main / nof-infra.
-Tracker task: `MANUAL-38757CBE`.
+Tracker task: `MANUAL-INFRA-CICD-STANDARD`.
 Related runbook: `../runbooks/hbl-release-builder-migration.md`.
+Decision record: `../decisions/cicd-standard-2026-06-11.md`.
 
 ## Decision
 
@@ -16,11 +17,11 @@ Secrets are not owned by `nof-infra` as values. This repository may document sec
 ## Expected Flow
 
 ```text
-GitHub merge/tag/release
-  -> CI/CD trigger
-  -> hbl deploy agent or runner
+service repository semver tag
+  -> owner-approved release-builder action
   -> nof-infra release-builder control manifest and Helm definitions
   -> MicroK8s namespace nof-apps
+  -> owner UAT acceptance
 ```
 
 The current target release-builder control file is `environments/hbl/desired-state.tsv`.
@@ -35,11 +36,11 @@ Historical hbl state may still include legacy service names such as `nof-platfor
 
 ## Current Flow Inventory - 2026-06-09
 
-Current production delivery is a hybrid and must be treated as technical debt until an explicit architecture decision is accepted.
+Current production delivery is still a hybrid during migration, but the target standard is accepted: production deployment should converge on `nof-infra` release-builder and desired-state.
 
 | Service | Current deploy trigger | Local workflow file | hbl mechanism | Status |
 | --- | --- | --- | --- | --- |
-| `nof-ht` | GitHub push to `main` | `nof-ht/.github/workflows/deploy.yml` | self-hosted runner `actions.runner.teanores-nof-ht.hbl-runner.service` | Works as the most automated path, but runner backoff can block delivery |
+| `nof-ht` | GitHub push to `main` | `nof-ht/.github/workflows/deploy.yml` | self-hosted runner `actions.runner.teanores-nof-ht.hbl-runner.service` | Temporary legacy exception until migrated to release-builder |
 | `nof-mp` | Owner-approved manual tag deploy | none | `/opt/nof-release-builder/nof-release-builder.sh deploy nof-mp <tag>` | Reliable when manually invoked; not GitHub Actions driven |
 | `nof-tt` | Owner-approved manual tag deploy | none | `/opt/nof-release-builder/nof-release-builder.sh deploy nof-tt <tag>` | Supported by release-builder; runtime still has legacy `forge-tasks` cleanup debt |
 
@@ -49,11 +50,19 @@ Additional hbl state:
 - The release-builder supports service keys `nof-mp`, `nof-tt` and `nof-ht`.
 - `nof-ht` GitHub Actions and release-builder both exist today, so the authoritative deployment path is not yet singular.
 
-Until the standard is finalized, agents must state which path they are using before any release-bound action:
+Until migration is complete, agents must state which path they are using before any release-bound action:
 
-- GitHub Actions runner path for `nof-ht`;
-- scoped release-builder path for `nof-mp` and `nof-tt`;
+- legacy GitHub Actions runner path for `nof-ht`;
+- canonical scoped release-builder path for `nof-mp` and `nof-tt`;
 - no broad multi-service sync unless every enabled service is explicitly approved in the current conversation.
+
+## Accepted Standard - 2026-06-11
+
+Use `nof-infra` release-builder and desired-state as the canonical production deployment path for NOF services.
+
+GitHub Actions may remain useful for service-local CI checks, but production deploy is only canonical when it delegates to `nof-infra` release-builder and follows the same owner approval, evidence and rollback gates.
+
+`nof-ht` remains a temporary legacy exception on GitHub Actions until `MANUAL-INFRA-RUNNER-HEALTH` and a dedicated migration task close the runner/backoff and release-builder parity gaps.
 
 ## Current Release Alignment - 2026-06-10
 
@@ -128,8 +137,7 @@ A release-builder change is acceptable only when:
 
 ## Open Cleanup
 
-- Create or activate the `nof-infra` tracker project; MCP currently rejects `projectKey: nof-infra`.
-- Decide the single NOF CI/CD standard before July 2026 beta: GitHub Actions for all services, release-builder desired-state for all services, or an explicit hybrid.
+- Migrate `nof-ht` production deploy from GitHub Actions to the release-builder standard.
 - Add runner health, backoff recovery and owner-facing incident steps if GitHub Actions remains part of the standard.
 - Confirm whether the hbl GitHub Actions runner is still needed after the hbl timer release-builder flow is stable.
 - Rename remaining hbl systemd/unit documentation from legacy wording to NOF service keys after accepted UAT.

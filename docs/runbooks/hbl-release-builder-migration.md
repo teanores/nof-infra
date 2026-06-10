@@ -47,27 +47,22 @@ Use read-only hbl discovery before changing any hbl service, timer, Helm release
 - public Task Tracker host: `task-tracker.forgath.ru`
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
 
-## CI/CD Standard Decision Needed
+## CI/CD Standard Decision
 
-The current hybrid is operational debt:
+Decision record: `../decisions/cicd-standard-2026-06-11.md`.
+
+Accepted standard: `nof-infra` release-builder and desired-state are the canonical production deployment path for NOF services.
+
+The current hybrid remains operational debt until nof-ht is migrated:
 
 - `nof-ht` uses GitHub Actions and can be blocked by runner disconnect/backoff.
 - `nof-mp` and `nof-tt` rely on manual scoped release-builder deploys.
 - `nof-release-builder-sync.timer` also exists, so agents must not assume a single authoritative path.
 
-Before July 2026 beta, choose one of these target models:
+Until nof-ht is migrated, production deploy requests must name the path explicitly:
 
-1. GitHub Actions for all services.
-   - Pros: familiar push-driven CI/CD, service-local checks and logs.
-   - Required: workflows for `nof-mp` and `nof-tt`, runner health monitoring, documented restart/backoff recovery.
-2. `nof-infra` release-builder desired-state for all services.
-   - Pros: one deployment mechanism and one environment control manifest.
-   - Required: reliable sync timer, clear tag policy, evidence, rollback and local preflight for every service.
-3. Explicit hybrid.
-   - Pros: lowest migration cost today.
-   - Required: written rule for which service uses which path, and a stop condition when the paths disagree.
-
-Until this decision is accepted, production deploy requests must name the path explicitly.
+- canonical release-builder path for `nof-mp` and `nof-tt`;
+- temporary legacy GitHub Actions runner path for `nof-ht`.
 
 ## Owner Approval Required
 
@@ -103,10 +98,10 @@ Evidence must keep the source ref and the public app version separate:
 ## Current Next Steps Without Owner Interaction
 
 - Keep local docs, runbooks and desired-state consistent with NOF naming.
-- Keep `nof-ht` disabled in desired-state until the owner accepts a single CI/CD standard or explicitly moves nof-ht from GitHub Actions to release-builder.
+- Keep `nof-ht` disabled in desired-state until a dedicated migration moves nof-ht from GitHub Actions to release-builder.
 - Keep post-UAT cleanup tasks linked to `MANUAL-C48428C1`, `MANUAL-2F20751D`, `MANUAL-43DB73A9` and `MANUAL-38757CBE`.
 - Prepare read-only command lists only; do not run hbl-changing commands without approval.
-- Track the missing `nof-infra` project in nof-tt MCP until the tracker can create `projectKey: nof-infra`.
+- Add a dedicated `nof-infra` MCP alias/token when project-scoped agent access is needed; do not use nof-tt/nof-mp/nof-ht aliases to mutate nof-infra records.
 
 ## Stop Conditions
 
