@@ -376,7 +376,7 @@ deploy_service() {
     --namespace "$NAMESPACE" \
     --set "image.repository=$IMAGE_REPOSITORY" \
     --set "image.tag=$image_tag" \
-    --set "env.NEXT_PUBLIC_APP_VERSION=$app_version" \
+    --set "appVersion=$app_version" \
     --wait --timeout 180s
 
   sudo microk8s kubectl rollout status "deployment/$RELEASE_NAME" -n "$NAMESPACE" --timeout=180s

@@ -11,7 +11,7 @@ nextauthUrl: "https://habit-tracker.forgath.ru"
 canonicalUrl: "https://habit-tracker.forgath.ru"
 telegramBotUsername: "test_elf_nof_bot"
 telegramBotId: "8750634200"
-appVersion: "1.33.51"
+appVersion: "1.33.53"
 
 resources:
   requests:
