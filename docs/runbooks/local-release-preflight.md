@@ -25,6 +25,14 @@ After the owner explicitly approves a production deploy window and the desired-s
 
 Use `-ExpectedEnabled false` only when validating a deliberately disabled row. Use `-ExpectedEnabled any` for read-only inventory checks that should not assert deployment state.
 
+For `nof-ht`, `enabled=true` is additionally blocked unless the migration gate has accepted evidence:
+
+```powershell
+.\scripts\release-preflight.ps1 -Service nof-ht -ExpectedRef v1.33.51 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-ht -NofHtMigrationGateApproved -NofHtMigrationEvidence "IDEA-... / commit ..."
+```
+
+Do not use this flag until nof-ht has provided release migration evidence and nof-infra migration Job gate is installed for the approved release window.
+
 ## Checks
 
 - nof-infra working tree is clean.
@@ -34,6 +42,7 @@ Use `-ExpectedEnabled false` only when validating a deliberately disabled row. U
 - The service `enabled` value matches `-ExpectedEnabled` unless `-ExpectedEnabled any` is used.
 - `-ApprovedProductionDeploy` additionally requires `enabled=true`, but the flag itself is not a deployment and does not contact production.
 - `-ApprovedProductionDeploy` requires `-ApprovedServices` and fails if desired-state contains enabled services outside that explicit approval list.
+- `nof-ht enabled=true` requires `-NofHtMigrationGateApproved` and non-empty `-NofHtMigrationEvidence`.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
 - Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.
@@ -47,6 +56,7 @@ Use `-ExpectedEnabled false` only when validating a deliberately disabled row. U
 - Desired-state `enabled` does not match the expected release state.
 - Production deploy mode is used without `-ApprovedServices`.
 - Desired-state contains enabled services outside the owner-approved release window.
+- `nof-ht enabled=true` is requested without accepted migration readiness evidence.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.
 - A live infra target file reintroduces `FORGE_TASKS_DATABASE_URL`, `FORGE_TASKS_DB_SCHEMA` or `FORGE_TASKS_MCP_TOKEN_SECRET`.

@@ -5,7 +5,9 @@ param(
   [ValidateSet("any", "true", "false")]
   [string] $ExpectedEnabled = "any",
   [string[]] $ApprovedServices = @(),
-  [switch] $ApprovedProductionDeploy
+  [switch] $ApprovedProductionDeploy,
+  [switch] $NofHtMigrationGateApproved,
+  [string] $NofHtMigrationEvidence = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +25,7 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $repoRoot
 
 $status = git status --porcelain
-if ($status) {
+if ($status -and $env:NOF_RELEASE_PREFLIGHT_ALLOW_DIRTY_FOR_TESTS -ne "1") {
   Fail "nof-infra working tree is not clean. Commit or stash local changes before release preflight."
 }
 
@@ -55,6 +57,14 @@ if ($row.Enabled -notin @("true", "false")) {
 }
 if ($ExpectedEnabled -ne "any" -and $row.Enabled -ne $ExpectedEnabled) {
   Fail "Desired-state enabled mismatch for ${Service}: expected '$ExpectedEnabled', got '$($row.Enabled)'"
+}
+if ($Service -eq "nof-ht" -and $row.Enabled -eq "true") {
+  if (!$NofHtMigrationGateApproved) {
+    Fail "nof-ht enabled=true requires -NofHtMigrationGateApproved. nof-ht must not be release-builder deployed until the migration Job gate and nof-ht db:migrate:release evidence are accepted."
+  }
+  if (!$NofHtMigrationEvidence.Trim()) {
+    Fail "nof-ht enabled=true requires -NofHtMigrationEvidence with tracker/wiki/commit evidence for migration readiness."
+  }
 }
 if ($ApprovedProductionDeploy -and $row.Enabled -ne "true") {
   Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
