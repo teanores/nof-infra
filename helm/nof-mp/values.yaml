@@ -21,6 +21,7 @@ env:
   NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
   NEXT_PUBLIC_NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
   NOF_PLATFORM_OAUTH_ISSUER: "https://forgath.ru"
+  NOF_MP_EMAIL_WEBHOOK_URL: "http://nof-mp:3000/api/internal/email/password-reset"
 
 secretEnv:
   DB_USER:
@@ -53,6 +54,24 @@ secretEnv:
   NOF_SECURITY_AUDIT_INGEST_TOKEN:
     secretName: nof-mp-security-audit
     key: edge-ingest-token
+  NOF_MP_EMAIL_WEBHOOK_TOKEN:
+    secretName: nof-mp-email-secrets
+    key: NOF_MP_EMAIL_WEBHOOK_TOKEN
+  NOF_MP_EMAIL_FROM:
+    secretName: nof-mp-email-secrets
+    key: NOF_MP_EMAIL_FROM
+  SMTP_HOST:
+    secretName: nof-mp-email-secrets
+    key: SMTP_HOST
+  SMTP_PORT:
+    secretName: nof-mp-email-secrets
+    key: SMTP_PORT
+  SMTP_USER:
+    secretName: nof-mp-email-secrets
+    key: SMTP_USER
+  SMTP_PASS:
+    secretName: nof-mp-email-secrets
+    key: SMTP_PASS
 
 resources:
   limits:
