@@ -73,14 +73,14 @@ Copy the reviewed script from the local nof-infra checkout or from a clean check
 Required properties:
 
 - owner/root permissions preserved as appropriate for hbl;
-- executable bit set;
+- executable bit set so the approved hbl admin account can run read-only verification and the systemd unit can execute the script;
 - no secret values copied;
 - only `nof-release-builder.sh` is replaced.
 
 Example target command after file is staged on hbl:
 
 ```bash
-sudo install -m 700 nof-release-builder.sh /opt/nof-release-builder/nof-release-builder.sh
+sudo install -m 755 nof-release-builder.sh /opt/nof-release-builder/nof-release-builder.sh
 ```
 
 ## Post-Install Verification
@@ -126,7 +126,7 @@ If list/syntax check fails after install:
 
 ```bash
 sudo cp "<backup-path>" /opt/nof-release-builder/nof-release-builder.sh
-sudo chmod 700 /opt/nof-release-builder/nof-release-builder.sh
+sudo chmod 755 /opt/nof-release-builder/nof-release-builder.sh
 /opt/nof-release-builder/nof-release-builder.sh list
 ```
 
