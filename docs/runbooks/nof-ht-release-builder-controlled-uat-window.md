@@ -24,6 +24,11 @@ Do not start the window until all items are true:
 - nof-infra release-builder migration Job gate is merged to `main`.
 - hbl release-builder script update is approved in the current owner conversation.
 - `nof-ht` desired-state remains disabled until the release window begins.
+- nof-ht legacy GitHub Actions production deploy path is disabled, gated, or explicitly held as emergency-only so it cannot race the release-builder path.
+- nof-ht approved release identity is consistent:
+  - the approved semver tag points to the intended commit;
+  - production image tag, package version and owner-facing version marker are not silently drifting;
+  - no untagged `main` commit is selected for the controlled release-builder window.
 - The owner explicitly approves the nof-ht release-builder UAT window.
 
 ## What Will Change During The Window
@@ -46,6 +51,7 @@ Approved window must not include:
 - deploying raw commit refs;
 - broad desired-state sync for multiple services;
 - nof-mp or nof-tt deploys unless explicitly named in a separate approval.
+- leaving the legacy GitHub Actions deploy path active as a parallel production writer.
 
 ## Release Path
 
@@ -190,4 +196,6 @@ Stop immediately if:
 - Kubernetes Job fails or times out;
 - Helm rollout fails;
 - OAuth redirects to the wrong path or user;
+- nof-ht production is already on an untagged image commit that does not match the approved semver tag;
+- `.github/workflows/deploy.yml` or another legacy path can still auto-run production Helm/migration actions on push to `main`;
 - owner has not approved the current production action.
