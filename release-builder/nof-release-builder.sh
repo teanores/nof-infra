@@ -86,6 +86,10 @@ service_config() {
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-tt"
       MIGRATION_MODE="none"
+      MIGRATION_COMMAND=""
+      MIGRATION_SECRET_REFS=""
+      MIGRATION_CONFIGMAP_REFS=""
+      MIGRATION_TIMEOUT_SECONDS="300"
       ;;
     nof-mp)
       REPO_URL="https://github.com/teanores/nof-mp.git"
@@ -96,6 +100,10 @@ service_config() {
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-mp"
       MIGRATION_MODE="none"
+      MIGRATION_COMMAND=""
+      MIGRATION_SECRET_REFS=""
+      MIGRATION_CONFIGMAP_REFS=""
+      MIGRATION_TIMEOUT_SECONDS="300"
       ;;
     nof-ht)
       REPO_URL="https://github.com/teanores/nof-ht.git"
@@ -106,6 +114,10 @@ service_config() {
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-ht"
       MIGRATION_MODE="job"
+      MIGRATION_COMMAND="npm run db:migrate:release"
+      MIGRATION_SECRET_REFS="nof-ht-secrets nof-ht-oauth-secrets"
+      MIGRATION_CONFIGMAP_REFS="nof-ht-config"
+      MIGRATION_TIMEOUT_SECONDS="300"
       ;;
     *)
       echo "ERROR: unknown service '$service'." >&2
@@ -123,16 +135,125 @@ require_migration_gate_ready() {
       return 0
       ;;
     job)
-      echo "ERROR: $service declares MIGRATION_MODE=job, but release-builder migration Job gate is not implemented yet." >&2
-      echo "ERROR: refusing to continue before build/push/Helm so the app cannot go live ahead of required DB migrations." >&2
-      echo "ERROR: complete NOF-INFRA-P0-RELEASE-BUILDER-MIGRATION-JOB and nof-ht release migration command first." >&2
-      exit 78
+      if [[ -z "${MIGRATION_COMMAND:-}" ]]; then
+        echo "ERROR: $service declares MIGRATION_MODE=job but MIGRATION_COMMAND is empty." >&2
+        exit 78
+      fi
+      return 0
       ;;
     *)
       echo "ERROR: unsupported migration mode '$migration_mode' for $service." >&2
       exit 64
       ;;
   esac
+}
+
+redact_secrets_from_stream() {
+  sed -E \
+    -e 's#postgres(ql)?://[^[:space:]]+#postgres://<redacted>#g' \
+    -e 's#(PASSWORD|TOKEN|SECRET|DATABASE_URL)=([^[:space:]]+)#\1=<redacted>#g'
+}
+
+append_env_from_refs() {
+  local refs="$1"
+  local ref_kind="$2"
+  local ref
+  for ref in $refs; do
+    case "$ref_kind" in
+      secret)
+        cat <<EOF
+            - secretRef:
+                name: $ref
+EOF
+        ;;
+      configmap)
+        cat <<EOF
+            - configMapRef:
+                name: $ref
+EOF
+        ;;
+      *)
+        echo "ERROR: unsupported envFrom ref kind '$ref_kind'." >&2
+        exit 64
+        ;;
+    esac
+  done
+}
+
+run_migration_gate() {
+  local service="$1"
+  local image="$2"
+  local image_tag="$3"
+  local app_version="$4"
+
+  case "$MIGRATION_MODE" in
+    none)
+      MIGRATION_EVIDENCE="mode=none"
+      echo "==> Migration gate: not required for $service"
+      return 0
+      ;;
+    job)
+      ;;
+    *)
+      echo "ERROR: unsupported migration mode '$MIGRATION_MODE' for $service." >&2
+      exit 64
+      ;;
+  esac
+
+  local job_name="${service}-migrate-${image_tag}"
+  local migration_log="$LOG_DIR/${service}-${image_tag}-migration.log"
+  local manifest_file="$WORK_DIR/$service/migration-job.yaml"
+
+  mkdir -p "$(dirname "$manifest_file")" "$LOG_DIR"
+
+  cat > "$manifest_file" <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: $job_name
+  namespace: $NAMESPACE
+  labels:
+    app.kubernetes.io/name: $service
+    app.kubernetes.io/component: migration
+    nof.forgath.ru/release-image-tag: "$image_tag"
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: $service
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migration
+          image: "$image"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-lc"]
+          args:
+            - "$MIGRATION_COMMAND"
+          env:
+            - name: NEXT_PUBLIC_APP_VERSION
+              value: "$app_version"
+          envFrom:
+EOF
+  append_env_from_refs "$MIGRATION_SECRET_REFS" secret >> "$manifest_file"
+  append_env_from_refs "$MIGRATION_CONFIGMAP_REFS" configmap >> "$manifest_file"
+
+  echo "==> Migration gate: running $job_name before Helm upgrade"
+  sudo microk8s kubectl delete job "$job_name" -n "$NAMESPACE" --ignore-not-found=true >/dev/null
+  sudo microk8s kubectl apply -f "$manifest_file"
+
+  if ! sudo microk8s kubectl wait --for=condition=complete "job/$job_name" -n "$NAMESPACE" --timeout="${MIGRATION_TIMEOUT_SECONDS}s"; then
+    echo "ERROR: migration job $job_name failed or timed out before Helm upgrade." >&2
+    sudo microk8s kubectl logs "job/$job_name" -n "$NAMESPACE" --tail=200 2>&1 | redact_secrets_from_stream | tee "$migration_log" >&2 || true
+    exit 70
+  fi
+
+  sudo microk8s kubectl logs "job/$job_name" -n "$NAMESPACE" --tail=500 2>&1 | redact_secrets_from_stream | tee "$migration_log" >/dev/null || true
+  MIGRATION_EVIDENCE="mode=job job=$job_name log=$migration_log"
+  echo "==> Migration gate: $job_name completed"
 }
 
 sanitize_ref() {
@@ -248,6 +369,8 @@ deploy_service() {
   sudo docker push "$IMAGE_REPOSITORY:$image_tag"
   sudo docker push "$IMAGE_REPOSITORY:latest"
 
+  run_migration_gate "$service" "$IMAGE_REPOSITORY:$image_tag" "$image_tag" "$app_version"
+
   echo "==> Deploying release $RELEASE_NAME"
   sudo microk8s helm3 upgrade --install "$RELEASE_NAME" "$chart_path" \
     --namespace "$NAMESPACE" \
@@ -276,6 +399,7 @@ deploy_service() {
     echo "image=$IMAGE_REPOSITORY:$image_tag"
     echo "release=$RELEASE_NAME"
     echo "namespace=$NAMESPACE"
+    echo "migration=$MIGRATION_EVIDENCE"
     echo "helm_revision=$helm_revision"
     echo "started_at=$started_at"
     echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

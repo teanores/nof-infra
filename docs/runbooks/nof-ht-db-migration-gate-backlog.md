@@ -58,17 +58,20 @@ Purpose: add release-builder support for service migration jobs before Helm upgr
 Current guard:
 
 - release-builder declares `nof-ht` as `MIGRATION_MODE=job`;
-- until the Job gate is implemented, deploy fails closed before build/push/Helm;
-- this prevents accidental nof-ht release-builder deployment while the service remains migration-unsafe.
+- release-builder runs a Kubernetes migration Job before Helm upgrade for `MIGRATION_MODE=job`;
+- the Job uses the target image tag, existing nof-ht secret/configMap refs and `npm run db:migrate:release`;
+- if the Job fails or times out, release-builder exits before Helm upgrade;
+- this prevents nof-ht from going live through release-builder while the service-owned release migration command is missing or failing.
 
 Acceptance:
 
 - service config can declare migration mode: `none` or `job`;
-- nof-ht uses `job`;
-- release-builder creates a one-shot Kubernetes Job using the target image tag;
-- Job receives existing service env/secret refs without exposing secret values;
-- release-builder waits for Job completion and fails before Helm upgrade on migration failure;
-- Job logs are captured with secret redaction.
+- nof-ht uses `job`; ✅
+- release-builder creates a one-shot Kubernetes Job using the target image tag; ✅
+- Job receives existing service env/secret refs without exposing secret values; ✅
+- release-builder waits for Job completion and fails before Helm upgrade on migration failure; ✅
+- Job logs are captured with secret redaction; ✅
+- nof-ht image contains a tested `db:migrate:release` command; pending nof-ht.
 
 ### NOF-INFRA-P0-MIGRATION-PREFLIGHT
 

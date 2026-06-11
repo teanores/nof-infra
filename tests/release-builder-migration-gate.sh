@@ -27,19 +27,15 @@ if [[ "$MIGRATION_MODE" != "job" ]]; then
   echo "expected nof-ht migration mode job, got $MIGRATION_MODE" >&2
   exit 1
 fi
-
-set +e
-output="$(require_migration_gate_ready nof-ht "$MIGRATION_MODE" 2>&1)"
-status=$?
-set -e
-
-if [[ "$status" -ne 78 ]]; then
-  echo "expected nof-ht migration gate to fail with exit 78, got $status" >&2
+if [[ "$MIGRATION_COMMAND" != "npm run db:migrate:release" ]]; then
+  echo "expected nof-ht release migration command, got $MIGRATION_COMMAND" >&2
   exit 1
 fi
+require_migration_gate_ready nof-ht "$MIGRATION_MODE"
 
-if [[ "$output" != *"MIGRATION_MODE=job"* || "$output" != *"refusing to continue before build/push/Helm"* ]]; then
-  echo "expected fail-closed migration gate message, got: $output" >&2
+redacted="$(printf '%s\n' 'DATABASE_URL=postgresql://user:password@example/db PASSWORD=secret TOKEN=token SECRET=value' | redact_secrets_from_stream)"
+if [[ "$redacted" == *"password"* || "$redacted" == *"secret"* || "$redacted" == *"token" ]]; then
+  echo "expected secret redaction, got: $redacted" >&2
   exit 1
 fi
 
