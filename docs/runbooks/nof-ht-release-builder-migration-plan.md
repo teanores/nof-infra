@@ -19,6 +19,7 @@ nof-ht semver tag
 No production change is approved by this document.
 
 Migration safety standard: `docs/decisions/nof-ht-db-migration-release-standard-2026-06-11.md`.
+Controlled UAT window runbook: `docs/runbooks/nof-ht-release-builder-controlled-uat-window.md`.
 
 ## Current State
 
@@ -68,6 +69,7 @@ Current nof-infra release-builder already knows service key `nof-ht`, but keeps 
    - `nof-ht v1.33.51 enabled=false`;
    - production-mode guard with nof-ht disabled.
 5. Ask owner for a dedicated nof-ht migration deploy window only after local checks pass.
+   - Use `nof-ht-release-builder-controlled-uat-window.md`.
 6. During approved window:
    - temporarily enable nof-ht desired-state for the approved semver tag;
    - deploy via release-builder;
