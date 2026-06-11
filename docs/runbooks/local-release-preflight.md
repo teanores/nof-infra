@@ -23,12 +23,14 @@ After the owner explicitly approves a production deploy window and the desired-s
 .\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-tt
 ```
 
+For a scoped release-builder deploy command such as `deploy nof-ht <tag>`, add `-ScopedDeployOnly`. This means existing enabled rows for other services are not treated as approval to run a broad desired-state sync.
+
 Use `-ExpectedEnabled false` only when validating a deliberately disabled row. Use `-ExpectedEnabled any` for read-only inventory checks that should not assert deployment state.
 
 For `nof-ht`, `enabled=true` is additionally blocked unless the migration gate has accepted evidence:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-ht -ExpectedRef v1.33.51 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-ht -NofHtMigrationGateApproved -NofHtMigrationEvidence "IDEA-... / commit ..."
+.\scripts\release-preflight.ps1 -Service nof-ht -ExpectedRef v1.33.52 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-ht -ScopedDeployOnly -NofHtMigrationGateApproved -NofHtMigrationEvidence "IDEA-... / commit ..."
 ```
 
 Do not use this flag until nof-ht has provided release migration evidence and nof-infra migration Job gate is installed for the approved release window.
@@ -41,7 +43,7 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 - The service `enabled` value is either `true` or `false`.
 - The service `enabled` value matches `-ExpectedEnabled` unless `-ExpectedEnabled any` is used.
 - `-ApprovedProductionDeploy` additionally requires `enabled=true`, but the flag itself is not a deployment and does not contact production.
-- `-ApprovedProductionDeploy` requires `-ApprovedServices` and fails if desired-state contains enabled services outside that explicit approval list.
+- `-ApprovedProductionDeploy` requires `-ApprovedServices` and fails if desired-state contains enabled services outside that explicit approval list, unless `-ScopedDeployOnly` is used for a single-service scoped release-builder deploy.
 - `nof-ht enabled=true` requires `-NofHtMigrationGateApproved` and non-empty `-NofHtMigrationEvidence`.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
@@ -55,7 +57,7 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 - Desired-state `enabled` is neither `true` nor `false`.
 - Desired-state `enabled` does not match the expected release state.
 - Production deploy mode is used without `-ApprovedServices`.
-- Desired-state contains enabled services outside the owner-approved release window.
+- Desired-state contains enabled services outside the owner-approved release window and the action is not explicitly scoped to one service.
 - `nof-ht enabled=true` is requested without accepted migration readiness evidence.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.

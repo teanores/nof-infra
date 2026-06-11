@@ -96,6 +96,7 @@ After owner accepts nof-ht migration readiness evidence and the desired-state ro
   -ExpectedEnabled true `
   -ApprovedProductionDeploy `
   -ApprovedServices nof-ht `
+  -ScopedDeployOnly `
   -NofHtMigrationGateApproved `
   -NofHtMigrationEvidence "<tracker/wiki/commit evidence>"
 ```

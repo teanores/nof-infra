@@ -6,6 +6,7 @@ param(
   [string] $ExpectedEnabled = "any",
   [string[]] $ApprovedServices = @(),
   [switch] $ApprovedProductionDeploy,
+  [switch] $ScopedDeployOnly,
   [switch] $NofHtMigrationGateApproved,
   [string] $NofHtMigrationEvidence = ""
 )
@@ -78,12 +79,16 @@ if ($ApprovedProductionDeploy) {
     Fail "Service '$Service' is not listed in -ApprovedServices."
   }
 
-  $unexpectedEnabledRows = $desiredRows |
-    Where-Object { $_.Enabled -eq "true" -and ($normalizedApprovedServices -notcontains $_.Service.ToLowerInvariant()) }
+  if (!$ScopedDeployOnly) {
+    $unexpectedEnabledRows = $desiredRows |
+      Where-Object { $_.Enabled -eq "true" -and ($normalizedApprovedServices -notcontains $_.Service.ToLowerInvariant()) }
 
-  if ($unexpectedEnabledRows) {
-    $unexpected = ($unexpectedEnabledRows | ForEach-Object { "$($_.Service)=$($_.Ref)" }) -join ", "
-    Fail "Desired-state has enabled rows outside approved services: $unexpected"
+    if ($unexpectedEnabledRows) {
+      $unexpected = ($unexpectedEnabledRows | ForEach-Object { "$($_.Service)=$($_.Ref)" }) -join ", "
+      Fail "Desired-state has enabled rows outside approved services: $unexpected"
+    }
+  } else {
+    Info "scoped deploy mode: existing enabled desired-state rows outside $Service are not treated as approval for broad sync"
   }
 }
 
