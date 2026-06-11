@@ -85,6 +85,7 @@ service_config() {
       RELEASE_NAME="nof-tt"
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-tt"
+      MIGRATION_MODE="none"
       ;;
     nof-mp)
       REPO_URL="https://github.com/teanores/nof-mp.git"
@@ -94,6 +95,7 @@ service_config() {
       RELEASE_NAME="nof-mp"
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-mp"
+      MIGRATION_MODE="none"
       ;;
     nof-ht)
       REPO_URL="https://github.com/teanores/nof-ht.git"
@@ -103,9 +105,31 @@ service_config() {
       RELEASE_NAME="nof-ht"
       CHART_REPO_URL="https://github.com/teanores/nof-infra.git"
       CHART_SUBDIR="helm/nof-ht"
+      MIGRATION_MODE="job"
       ;;
     *)
       echo "ERROR: unknown service '$service'." >&2
+      exit 64
+      ;;
+  esac
+}
+
+require_migration_gate_ready() {
+  local service="$1"
+  local migration_mode="$2"
+
+  case "$migration_mode" in
+    none)
+      return 0
+      ;;
+    job)
+      echo "ERROR: $service declares MIGRATION_MODE=job, but release-builder migration Job gate is not implemented yet." >&2
+      echo "ERROR: refusing to continue before build/push/Helm so the app cannot go live ahead of required DB migrations." >&2
+      echo "ERROR: complete NOF-INFRA-P0-RELEASE-BUILDER-MIGRATION-JOB and nof-ht release migration command first." >&2
+      exit 78
+      ;;
+    *)
+      echo "ERROR: unsupported migration mode '$migration_mode' for $service." >&2
       exit 64
       ;;
   esac
@@ -211,6 +235,8 @@ deploy_service() {
     echo "ERROR: Helm chart not found for $service: $chart_path" >&2
     exit 66
   fi
+
+  require_migration_gate_ready "$service" "$MIGRATION_MODE"
 
   echo "==> Building $IMAGE_REPOSITORY:$image_tag"
   sudo docker build \

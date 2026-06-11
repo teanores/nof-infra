@@ -55,6 +55,12 @@ Acceptance:
 
 Purpose: add release-builder support for service migration jobs before Helm upgrade.
 
+Current guard:
+
+- release-builder declares `nof-ht` as `MIGRATION_MODE=job`;
+- until the Job gate is implemented, deploy fails closed before build/push/Helm;
+- this prevents accidental nof-ht release-builder deployment while the service remains migration-unsafe.
+
 Acceptance:
 
 - service config can declare migration mode: `none` or `job`;
