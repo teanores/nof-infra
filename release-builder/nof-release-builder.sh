@@ -154,6 +154,9 @@ sync_service_is_approved() {
   local approved
 
   if [[ -z "$allowlist" ]]; then
+    if [[ "${NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES:-}" =~ ^(1|true|yes)$ ]]; then
+      return 1
+    fi
     return 0
   fi
 
