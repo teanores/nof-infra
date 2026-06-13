@@ -1,6 +1,6 @@
 # CI/CD Standard Decision - 2026-06-11
 
-Status: accepted working standard for June beta hardening; updated on 2026-06-13 after nof-mp v0.2.35 UAT.
+Status: accepted working standard for June beta hardening; updated on 2026-06-14 after remote deploy architecture decision.
 Owner: nof-main / nof-infra.
 Tracker: `NOF-INFRA-SPRINT-CICD-20260611`, task `MANUAL-INFRA-CICD-STANDARD`.
 
@@ -23,18 +23,33 @@ The canonical production deployment model for NOF services is:
 
 ```text
 service repository tag
-  -> nof-infra desired-state / release-builder
+  -> nof-infra release workflow
+  -> hbl infra-owned GitHub Actions self-hosted runner
+  -> nof-infra release-builder
   -> hbl MicroK8s / Helm release
   -> owner UAT acceptance
 ```
 
-The target operating mode is an approved desired-state release:
+The target remote operating mode is an approved GitHub Actions release workflow:
+
+```text
+service repository semver tag
+  -> local service checks and nof-infra preflight
+  -> nof-infra workflow_dispatch with service, tag and approval/evidence id
+  -> hbl self-hosted runner executes release-builder for exactly one approved service/tag
+  -> release-builder writes evidence and rollback data
+  -> agent reads evidence and requests owner UAT
+```
+
+The hbl self-hosted runner must be owned by `nof-infra`, not by a single product repository. It is an execution agent for `nof-infra` release-builder, not an independent deployment implementation.
+
+The desired-state timer remains a fail-closed fallback/pull mode:
 
 ```text
 service repository semver tag
   -> local service checks and nof-infra preflight
   -> nof-infra desired-state update for exactly one approved service/tag
-  -> hbl release-builder sync/timer applies the approved row
+  -> hbl release-builder sync/timer applies the approved row only when the release window allowlist permits it
   -> release-builder writes evidence and rollback data
   -> agent reads evidence and requests owner UAT
 ```
@@ -76,7 +91,7 @@ Service repositories own:
 - service-local migrations;
 - `.env.example` files without secret values.
 
-GitHub Actions may be used for service-local CI checks, but production deploy is not considered canonical unless the action delegates to `nof-infra` release-builder and follows the same owner approval, evidence and rollback gates.
+GitHub Actions may be used for service-local CI checks. Production deploy is canonical only when a GitHub Actions job runs on the infra-owned hbl self-hosted runner and delegates to `nof-infra` release-builder with the same owner approval, evidence and rollback gates.
 
 ## Transition Rule
 
@@ -107,6 +122,7 @@ Before deploy approval, the agent must state in chat:
 
 The agent must also state the deploy mode:
 
+- `github-runner release-builder`: remote workflow dispatch runs on the infra-owned hbl self-hosted runner and invokes nof-infra release-builder;
 - `desired-state automation`: push tag and nof-infra desired-state, then wait for hbl sync/timer or a documented pull agent;
 - `manual release-builder`: direct SSH invocation of the hbl release-builder command after approval;
 - `legacy GitHub Actions`: temporary nof-ht exception only.
@@ -147,4 +163,5 @@ Stop before relying on desired-state automation if:
 - `IDEA-20260613-160A72`: create a dedicated `nof-infra` tracker project and convert this release automation standard into project-scoped epics/tasks.
 - Add a single approved-release command or script that prepares service tag, updates desired-state, runs preflight and prints the exact owner briefing without running production changes.
 - Install and configure the release-builder sync allowlist guard `NOF_RELEASE_SYNC_APPROVED_SERVICES` on hbl, then verify whether hbl sync/timer can safely replace direct SSH deploys for `nof-mp` and `nof-tt`.
-- After the allowlist guard is proven in a controlled release window, make manual deploy emergency-only.
+- Create an infra-owned GitHub Actions self-hosted runner workflow in `nof-infra` for remote `workflow_dispatch` production releases.
+- After the infra-owned runner workflow is proven in a controlled release window, make manual deploy emergency-only.
