@@ -13,6 +13,22 @@ This preflight does not contact hbl, VPS, Kubernetes, Helm, Caddy or Docker. It 
 
 From `nof-infra`:
 
+Prepare an owner-facing release-window report first:
+
+```powershell
+just prepare-release nof-mp v0.2.35 desired-state
+```
+
+If the repository contains known unrelated local changes and you only need a planning report, use the explicit dirty variant:
+
+```powershell
+just prepare-release-dirty nof-mp v0.2.35 desired-state
+```
+
+The preparer writes a report under `reports/` and does not contact hbl, VPS, Kubernetes, Helm, Caddy or Docker.
+
+Then run the stricter preflight:
+
 ```powershell
 .\scripts\release-preflight.ps1 -Service nof-tt -ExpectedRef v0.2.5 -Environment hbl -ExpectedEnabled true
 ```
@@ -37,6 +53,9 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 
 ## Checks
 
+- `scripts/prepare-release-window.ps1` builds a release-window briefing and flags whether the selected mode is ready or blocked.
+- `just prepare-release <service> <ref> <mode>` is the preferred entry point for release-window planning.
+- `just prepare-release-dirty <service> <ref> <mode>` is allowed only for planning reports when unrelated local changes exist; it must not be used as proof that production is safe.
 - nof-infra working tree is clean.
 - `environments/hbl/desired-state.tsv` contains the expected service row.
 - The service release ref matches the expected release ref.

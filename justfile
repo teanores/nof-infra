@@ -11,6 +11,7 @@ test:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
 
 test-bash-git:
+  & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
 
@@ -19,11 +20,18 @@ test-bash-wsl:
 
 test-all:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
+  & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
 
 preflight service ref environment="hbl":
   .\scripts\release-preflight.ps1 -Service {{service}} -ExpectedRef {{ref}} -Environment {{environment}}
+
+prepare-release service ref mode="desired-state" environment="hbl":
+  .\scripts\prepare-release-window.ps1 -Service {{service}} -Ref {{ref}} -Mode {{mode}} -Environment {{environment}}
+
+prepare-release-dirty service ref mode="desired-state" environment="hbl":
+  .\scripts\prepare-release-window.ps1 -Service {{service}} -Ref {{ref}} -Mode {{mode}} -Environment {{environment}} -AllowDirty
 
 readiness nof_mp_ref nof_tt_ref nof_ht_ref environment="hbl":
   .\scripts\local-release-readiness.ps1 -ExpectedNofMpRef {{nof_mp_ref}} -ExpectedNofTtRef {{nof_tt_ref}} -ExpectedNofHtRef {{nof_ht_ref}} -Environment {{environment}}
