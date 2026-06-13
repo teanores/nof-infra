@@ -27,6 +27,14 @@ just prepare-release-dirty nof-mp v0.2.35 desired-state
 
 The preparer writes a report under `reports/` and does not contact hbl, VPS, Kubernetes, Helm, Caddy or Docker.
 
+Audit default desired-state policy:
+
+```powershell
+just check-policy
+```
+
+This policy audit is expected to fail while more than one service row is `enabled=true` or while `nof-ht` remains enabled before its release-builder migration gate is accepted. Treat that failure as release-control debt, not as permission to bypass release approvals.
+
 Then run the stricter preflight:
 
 ```powershell
@@ -56,6 +64,7 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 - `scripts/prepare-release-window.ps1` builds a release-window briefing and flags whether the selected mode is ready or blocked.
 - `just prepare-release <service> <ref> <mode>` is the preferred entry point for release-window planning.
 - `just prepare-release-dirty <service> <ref> <mode>` is allowed only for planning reports when unrelated local changes exist; it must not be used as proof that production is safe.
+- `just check-policy` verifies the default routine-release policy for desired-state and currently serves as an explicit drift detector.
 - nof-infra working tree is clean.
 - `environments/hbl/desired-state.tsv` contains the expected service row.
 - The service release ref matches the expected release ref.

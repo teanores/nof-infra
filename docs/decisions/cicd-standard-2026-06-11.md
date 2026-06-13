@@ -41,6 +41,26 @@ service repository semver tag
 
 Direct SSH invocation of `nof-release-builder.sh deploy <service> <tag>` is allowed only as an explicitly named manual release-builder mode for a supervised hotfix, incident recovery, or automation outage. It must not be described as GitHub-driven automation in owner communication.
 
+## Desired-State Policy
+
+`environments/hbl/desired-state.tsv` is production-bound release control, not a general inventory list.
+
+Default policy:
+
+- at most one service row may be `enabled=true` for a routine release window;
+- every enabled row must have explicit owner approval in the current conversation;
+- `nof-ht` must remain `enabled=false` until its release-builder migration gate is accepted;
+- multi-service release windows are exceptional and must name every approved service in chat, tracker evidence and release-window reports;
+- disabled rows may keep their last known semver tag for inventory, but they are not approval to deploy.
+
+Local guard:
+
+```powershell
+just check-policy
+```
+
+This command does not contact hbl or production. It fails when desired-state drifts away from the default routine-release policy.
+
 `nof-infra` owns:
 
 - release-builder scripts;
