@@ -8,9 +8,9 @@ Environment: `hbl`
 
 File: `environments/hbl/desired-state.tsv`
 
-## Current Finding
+## Original Finding
 
-`just check-policy` fails because the current desired-state file has multiple enabled rows:
+`just check-policy` failed because the desired-state file had multiple enabled rows:
 
 - `nof-mp` -> `v0.2.35`
 - `nof-tt` -> `v0.2.5`
@@ -29,12 +29,17 @@ That prevents unattended broad sync, but it does not make the repository control
 
 ## Required Cleanup
 
-Create an approved nof-infra desired-state cleanup task to choose and apply the default state:
+Owner approved cleanup in chat on 2026-06-14:
 
-- keep only the currently approved release-window service enabled; or
-- set all rows `enabled=false` by default and enable exactly one row only during an approved release window.
+- set all rows `enabled=false` by default;
+- enable exactly one row only during an approved release window;
+- keep `nof-ht enabled=false` until its release-builder migration gate is accepted.
 
-Do not change `desired-state.tsv` as a side effect of documentation work. It is production-bound release control.
+Applied default state:
+
+- `nof-mp` -> `v0.2.35`, `enabled=false`
+- `nof-tt` -> `v0.2.5`, `enabled=false`
+- `nof-ht` -> `v1.33.56`, `enabled=false`
 
 ## Verification Commands
 
@@ -43,12 +48,7 @@ just check-policy
 just prepare-release nof-mp v0.2.35 desired-state
 ```
 
-Expected before cleanup:
-
-- `just check-policy` fails with multiple enabled rows.
-- `just prepare-release ... desired-state` reports `BLOCKED for desired-state automation`.
-
 Expected after cleanup:
 
-- `just check-policy` passes when the default policy is satisfied.
-- release-window preparation is `READY` only for the explicitly approved service/tag.
+- `just check-policy` passes.
+- `just prepare-release ... desired-state` remains `BLOCKED` until the target service row is explicitly enabled for an approved release window.
