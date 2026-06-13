@@ -24,6 +24,11 @@ on:
         required: true
         type: boolean
         default: false
+      nof_ht_migration_gate_approved:
+        description: "Allow nof-ht deploy after migration gate evidence is accepted."
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -51,6 +56,7 @@ jobs:
           SERVICE: ${{ inputs.service }}
           REF: ${{ inputs.ref }}
           APPROVAL_ID: ${{ inputs.approval_id }}
+          NOF_HT_MIGRATION_GATE_APPROVED: ${{ inputs.nof_ht_migration_gate_approved }}
         run: |
           set -euo pipefail
 
@@ -67,6 +73,11 @@ jobs:
           if [[ -z "${APPROVAL_ID// }" ]]; then
             echo "approval_id is required and must reference owner approval/evidence." >&2
             exit 64
+          fi
+
+          if [[ "$SERVICE" == "nof-ht" && "$NOF_HT_MIGRATION_GATE_APPROVED" != "true" ]]; then
+            echo "nof-ht deploy through nof-infra runner is blocked until migration gate approval is explicit." >&2
+            exit 78
           fi
 
           awk -F '\t' '

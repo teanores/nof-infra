@@ -12,11 +12,13 @@ $text = Get-Content $workflow -Raw
 $required = @(
   "workflow_dispatch:",
   "execute_deploy:",
+  "nof_ht_migration_gate_approved:",
   "runs-on: [self-hosted, linux, nof-infra]",
   "environment: hbl-production",
   "/opt/nof-release-builder/nof-release-builder.sh deploy",
   "Release ref must be a semver tag",
   "approval_id is required",
+  "nof-ht deploy through nof-infra runner is blocked until migration gate approval is explicit.",
   "permissions:",
   "contents: read"
 )
