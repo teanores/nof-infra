@@ -85,9 +85,11 @@ Until nof-ht is migrated, production deploy requests must name the path explicit
 - canonical release-builder path for `nof-mp` and `nof-tt`;
 - temporary legacy GitHub Actions runner path for `nof-ht`.
 
-As of 2026-06-13, the desired target is stricter:
+As of 2026-06-14, the desired target is stricter:
 
-- routine `nof-mp` and `nof-tt` releases should move from direct SSH deploy commands to approved desired-state automation;
+- routine `nof-mp` and `nof-tt` releases should move from direct SSH deploy commands to an infra-owned GitHub Actions self-hosted runner on hbl;
+- the GitHub runner workflow must live in `nof-infra` and invoke `nof-infra` release-builder for exactly one approved service/tag;
+- desired-state/timer sync remains a fail-closed fallback/pull mode and inventory/control mechanism;
 - direct SSH release-builder deploys remain allowed only when explicitly named as `manual release-builder` mode;
 - owner-facing evidence must state whether hbl applied the release by timer/sync or the agent invoked the deploy command.
 
@@ -177,6 +179,34 @@ If any expectation is not met, keep using explicitly approved `manual release-bu
 Because hbl sync is fail-closed, a pushed desired-state row should not deploy without an explicit allowlist, but agents still must not push desired-state changes casually. Desired-state is production-bound release control and must remain one-service scoped for routine release windows.
 
 Before switching routine releases to desired-state automation, correct repository desired-state policy drift and use a release-window wrapper so `NOF_RELEASE_SYNC_APPROVED_SERVICES` contains only the owner-approved service keys.
+
+## GitHub Runner Remote Release Target
+
+The preferred remote release trigger is an infra-owned GitHub Actions self-hosted runner on hbl.
+
+Target shape:
+
+```text
+nof-infra workflow_dispatch
+  inputs: service, ref, approval/evidence id
+  -> hbl self-hosted runner
+  -> local nof-infra preflight
+  -> /opt/nof-release-builder/nof-release-builder.sh deploy <service> <semver-tag>
+  -> release-builder evidence
+  -> smoke checks
+  -> owner UAT
+```
+
+Acceptance gates:
+
+- runner is registered for `teanores/nof-infra`, not a product-specific repository;
+- workflow uses constrained service choices: `nof-mp`, `nof-tt`, `nof-ht`;
+- workflow accepts only semver tags, not branches or raw commits;
+- production environment uses GitHub environment approval or an equivalent owner approval gate;
+- job never prints secret values;
+- job delegates deployment to `/opt/nof-release-builder/nof-release-builder.sh`;
+- evidence path, image tag, Helm revision and rollback command are captured after the run;
+- manual SSH release-builder remains incident/hotfix fallback only.
 
 ## Release Mode Checklist
 
