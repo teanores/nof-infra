@@ -85,6 +85,32 @@ Expected:
 - deploy job is skipped;
 - no hbl command runs.
 
+## Local Readiness Checks
+
+Validate the workflow and runbook gates before asking the owner to register the hbl runner:
+
+```powershell
+just check-runner-workflow
+```
+
+Expected:
+
+- workflow is manual-only;
+- deploy job targets `[self-hosted, linux, nof-infra]`;
+- `hbl-production` environment gate is present;
+- deploy delegates to release-builder;
+- runbook warns not to paste the registration token into chat, Wiki, tracker or git.
+
+Production runner readiness is intentionally blocked until the separate nof-infra runner is registered:
+
+```powershell
+just check-runner-production
+```
+
+Expected before registration:
+
+- command exits blocked and explains that the short-lived GitHub runner registration token is still required.
+
 ## hbl Runner Registration
 
 Do not reconfigure the existing product-specific nof-ht runner.

@@ -10,9 +10,16 @@ status:
 test:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
   .\tests\github-runner-workflow-policy.ps1
+  .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
 
 check-policy environment="hbl":
   .\scripts\check-desired-state-policy.ps1 -Environment {{environment}}
+
+check-runner-workflow:
+  .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
+
+check-runner-production:
+  .\scripts\check-github-runner-readiness.ps1
 
 test-bash-git:
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
@@ -25,6 +32,7 @@ test-bash-wsl:
 test-all:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
   .\tests\github-runner-workflow-policy.ps1
+  .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
