@@ -159,7 +159,7 @@ NOF_RELEASE_SYNC_APPROVED_SERVICES=none
 
 With `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1`, an empty or unset allowlist blocks all enabled manifest rows. This is the safe default for the hbl timer. During an approved release window, set `NOF_RELEASE_SYNC_APPROVED_SERVICES` to the exact service keys approved for that window, for example `nof-mp` or `nof-mp,nof-tt`.
 
-This is a code-level guard, but it is not effective on hbl until the updated script is installed and the systemd unit/timer is configured to pass the intended allowlist policy.
+This guard is effective on hbl only after the updated script is installed and the systemd unit/timer is configured to pass the intended allowlist policy.
 
 2026-06-13 status against these expectations:
 
@@ -169,13 +169,14 @@ This is a code-level guard, but it is not effective on hbl until the updated scr
 - manifest path: yes, `environments/hbl/desired-state.tsv`;
 - evidence/logs: yes, journal shows deploy/skip decisions and release-builder writes evidence;
 - broad sync isolation: implemented through `NOF_RELEASE_SYNC_APPROVED_SERVICES`;
-- fail-closed timer mode: available through `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1`, configure on hbl before relying on unattended desired-state releases.
+- fail-closed timer mode: installed on hbl through `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1` and `NOF_RELEASE_SYNC_APPROVED_SERVICES=none`;
+- repository desired-state policy: not clean yet; local `environments/hbl/desired-state.tsv` still has multiple enabled rows and must be corrected before routine desired-state automation is considered ready.
 
 If any expectation is not met, keep using explicitly approved `manual release-builder` mode for production hotfixes and treat automation as blocked.
 
-Because broad sync isolation is not yet enforced on hbl, agents must not push desired-state changes casually. A pushed enabled row can be deployed by the timer within minutes.
+Because hbl sync is fail-closed, a pushed desired-state row should not deploy without an explicit allowlist, but agents still must not push desired-state changes casually. Desired-state is production-bound release control and must remain one-service scoped for routine release windows.
 
-Before switching routine releases to desired-state automation, install the updated release-builder script on hbl and configure the sync service or release-window wrapper so `NOF_RELEASE_SYNC_APPROVED_SERVICES` contains only the owner-approved service keys.
+Before switching routine releases to desired-state automation, correct repository desired-state policy drift and use a release-window wrapper so `NOF_RELEASE_SYNC_APPROVED_SERVICES` contains only the owner-approved service keys.
 
 ## Release Mode Checklist
 
