@@ -1,6 +1,6 @@
 # CI/CD Ownership
 
-Status: accepted working standard for June beta hardening.
+Status: accepted working standard for June beta hardening; updated 2026-06-13 to separate automated and manual release-builder modes.
 Owner: nof-main / nof-infra.
 Tracker task: `MANUAL-INFRA-CICD-STANDARD`.
 Related runbook: `../runbooks/hbl-release-builder-migration.md`.
@@ -18,8 +18,9 @@ Secrets are not owned by `nof-infra` as values. This repository may document sec
 
 ```text
 service repository semver tag
-  -> owner-approved release-builder action
+  -> owner-approved desired-state release
   -> nof-infra release-builder control manifest and Helm definitions
+  -> hbl release-builder sync/timer or approved pull agent
   -> MicroK8s namespace nof-apps
   -> owner UAT acceptance
 ```
@@ -55,6 +56,31 @@ Until migration is complete, agents must state which path they are using before 
 - legacy GitHub Actions runner path for `nof-ht`;
 - canonical scoped release-builder path for `nof-mp` and `nof-tt`;
 - no broad multi-service sync unless every enabled service is explicitly approved in the current conversation.
+
+## Release Modes
+
+Agents must not blur GitHub state, desired-state and direct hbl execution. Use one of these names in chat, tracker evidence and runbooks.
+
+| Mode | Trigger | Intended use | Production action owner | Status |
+| --- | --- | --- | --- | --- |
+| `desired-state automation` | Push service tag and one-service `nof-infra` desired-state update; hbl sync/timer or pull agent applies it | Target standard for `nof-mp`, `nof-tt`, then `nof-ht` after migration | hbl release-builder automation | Target |
+| `manual release-builder` | Agent runs `/opt/nof-release-builder/nof-release-builder.sh deploy <service> <tag>` over SSH after approval | Supervised hotfix, automation outage, incident recovery | Agent in current owner-approved session | Temporary allowed exception |
+| `legacy GitHub Actions` | GitHub Actions self-hosted runner deploys on service repo push | `nof-ht` only until release-builder migration closes | GitHub runner on hbl | Temporary legacy exception |
+
+Manual release-builder mode must always be called manual in the owner-facing report. A release is not GitHub-driven merely because its tag and desired-state were pushed before the SSH command.
+
+## Automation Target
+
+The preferred June target is to make `desired-state automation` safe enough that nof-main agents do not need to SSH for routine releases:
+
+1. Service repo creates and pushes an approved semver tag after local checks.
+2. `nof-infra` desired-state changes exactly one approved service row to that tag.
+3. A local preflight proves the row, naming, enabled services, edge targets and legacy identifiers are safe.
+4. hbl sync/timer or a pull agent fetches `nof-infra` and runs scoped release-builder logic.
+5. Evidence and rollback data are written under the hbl release-builder evidence directory.
+6. The agent reads the evidence, performs smoke checks, and asks the owner for UAT.
+
+Do not make this the default until read-only hbl checks prove the timer/service uses `nof-infra`, the expected manifest path, and a safe scoped sync behavior.
 
 ## Accepted Standard - 2026-06-11
 
@@ -134,11 +160,14 @@ A release-builder change is acceptable only when:
 - local preflight passes before any hbl run;
 - owner approval exists in the current conversation for any production-changing command;
 - rollback and evidence locations are recorded in the release task or Wiki.
+- the chosen release mode is named explicitly.
 
 ## Open Cleanup
 
 - Migrate `nof-ht` production deploy from GitHub Actions to the release-builder standard.
 - Add runner health, backoff recovery and owner-facing incident steps if GitHub Actions remains part of the standard.
 - Confirm whether the hbl GitHub Actions runner is still needed after the hbl timer release-builder flow is stable.
+- Verify hbl `nof-release-builder-sync.timer` and `nof-release-builder-sync.service` as the future nof-mp/nof-tt automation path.
+- Add a nof-infra tracker project and stop storing infra delivery tasks under service projects.
 - Rename remaining hbl systemd/unit documentation from legacy wording to NOF service keys after accepted UAT.
 - Decide database and system-user naming separately from this deployment ownership document.

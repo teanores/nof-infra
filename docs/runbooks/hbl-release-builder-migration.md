@@ -1,6 +1,6 @@
 # hbl Release Builder Migration
 
-Status: draft, partially implemented.
+Status: draft, partially implemented; updated 2026-06-13 after nof-mp v0.2.35 exposed manual-vs-automated deploy ambiguity.
 Purpose: move hbl release control from legacy `nof-platform-hybrid` to `nof-infra`.
 Tracker task: `MANUAL-38757CBE`.
 
@@ -45,6 +45,18 @@ Current read-only discovery on 2026-06-11:
 - Live Helm still includes legacy releases `nof-platform` and `forge-tasks` alongside canonical `nof-mp` and `nof-tt`; treat legacy release cleanup as a separate post-UAT task.
 - nof-ht GitHub Actions runner health and recovery are documented in `hbl-github-actions-runner-health.md`.
 
+Current read-only discovery on 2026-06-13:
+
+- `nof-release-builder-sync.timer` is enabled and active, with `OnUnitActiveSec=5min`.
+- `nof-release-builder-sync.service` runs `/opt/nof-release-builder/nof-release-builder.sh sync main` as `nofadminhbl`.
+- Installed release-builder defaults point to `https://github.com/teanores/nof-infra.git`.
+- Installed release-builder defaults use `environments/hbl/desired-state.tsv`.
+- `/opt/nof-release-builder/nof-release-builder.sh list` returns `nof-mp`, `nof-tt`, `nof-ht`.
+- Journal evidence shows the timer fetched `nof-infra main` and applied `nof-mp v0.2.35` from desired-state after the same tag had already been deployed manually.
+- Journal evidence also shows broad sync iterating over enabled `nof-tt v0.2.5` and `nof-ht v1.33.56`, skipping them only because commits were unchanged.
+
+Implication: hbl desired-state automation is already active enough to deploy a pushed enabled row. Manual release-builder deploy plus desired-state push can cause a duplicate rollout. Routine nof-mp/nof-tt releases should move to one mode per release window: either desired-state automation or manual release-builder, not both.
+
 ## Target State
 
 - control repo: `https://github.com/teanores/nof-infra.git`
@@ -72,6 +84,12 @@ Until nof-ht is migrated, production deploy requests must name the path explicit
 
 - canonical release-builder path for `nof-mp` and `nof-tt`;
 - temporary legacy GitHub Actions runner path for `nof-ht`.
+
+As of 2026-06-13, the desired target is stricter:
+
+- routine `nof-mp` and `nof-tt` releases should move from direct SSH deploy commands to approved desired-state automation;
+- direct SSH release-builder deploys remain allowed only when explicitly named as `manual release-builder` mode;
+- owner-facing evidence must state whether hbl applied the release by timer/sync or the agent invoked the deploy command.
 
 ## Owner Approval Required
 
@@ -104,6 +122,75 @@ Evidence must keep the source ref and the public app version separate:
 8. Keep `environments/hbl/desired-state.tsv` rows disabled until local regression and owner UAT approval.
 9. Enable one service at a time.
 
+## Desired-State Automation Readiness
+
+Before routine releases rely on `nof-release-builder-sync.timer`, verify these read-only checks on hbl:
+
+```bash
+systemctl status nof-release-builder-sync.timer --no-pager -l
+systemctl cat nof-release-builder-sync.service
+systemctl cat nof-release-builder-sync.timer
+journalctl -u nof-release-builder-sync.service -n 120 --no-pager -o short-iso
+/opt/nof-release-builder/nof-release-builder.sh list
+```
+
+Expected:
+
+- timer is active only if its behavior is understood and accepted;
+- service command uses `/opt/nof-release-builder/nof-release-builder.sh sync main`;
+- installed release-builder script points to `https://github.com/teanores/nof-infra.git`;
+- installed release-builder script uses `environments/hbl/desired-state.tsv`;
+- sync evidence or logs show which service/tag was applied;
+- no secret values are printed in systemd status or journal output;
+- broad sync cannot apply unapproved enabled service rows during a one-service release window.
+
+2026-06-13 status against these expectations:
+
+- timer active: yes;
+- service command: yes, `sync main`;
+- control repo: yes, `nof-infra`;
+- manifest path: yes, `environments/hbl/desired-state.tsv`;
+- evidence/logs: yes, journal shows deploy/skip decisions and release-builder writes evidence;
+- broad sync isolation: not yet. The sync iterates all enabled rows, so one-service release safety depends on desired-state discipline and preflight, not on hbl enforcing an approved-services allowlist.
+
+If any expectation is not met, keep using explicitly approved `manual release-builder` mode for production hotfixes and treat automation as blocked.
+
+Because broad sync isolation is not yet enforced on hbl, agents must not push desired-state changes casually. A pushed enabled row can be deployed by the timer within minutes.
+
+## Release Mode Checklist
+
+Before asking for deploy approval, choose and state exactly one mode.
+
+### desired-state automation
+
+Use for the target routine flow only after readiness is confirmed.
+
+1. Push service semver tag.
+2. Update only one `environments/hbl/desired-state.tsv` row.
+3. Run local `scripts/release-preflight.ps1` with the approved service and tag.
+4. Push nof-infra desired-state.
+5. Wait for hbl sync/timer or the approved pull agent.
+6. Read release-builder evidence and smoke the service.
+7. Ask owner for UAT.
+
+### manual release-builder
+
+Use for supervised hotfixes, incident recovery or automation outage only.
+
+1. Push service semver tag.
+2. Update and push nof-infra desired-state for traceability.
+3. Run local preflight.
+4. Tell the owner that the rollout will be a direct SSH release-builder invocation.
+5. After explicit approval, run:
+
+```bash
+/opt/nof-release-builder/nof-release-builder.sh deploy <service> <semver-tag>
+```
+
+6. Record evidence path, image, Helm revision and UAT checklist.
+
+Do not call this GitHub automation.
+
 ## Current Next Steps Without Owner Interaction
 
 - Keep local docs, runbooks and desired-state consistent with NOF naming.
@@ -111,6 +198,8 @@ Evidence must keep the source ref and the public app version separate:
 - Keep post-UAT cleanup tasks linked to `MANUAL-C48428C1`, `MANUAL-2F20751D`, `MANUAL-43DB73A9` and `MANUAL-38757CBE`.
 - Prepare read-only command lists only; do not run hbl-changing commands without approval.
 - Add a dedicated `nof-infra` MCP alias/token when project-scoped agent access is needed; do not use nof-tt/nof-mp/nof-ht aliases to mutate nof-infra records.
+- Create the `nof-infra` tracker project with platform:admin scope, then move infrastructure CI/CD work out of service projects.
+- Add a local script or just recipe that prepares an approved-release evidence bundle without performing production changes.
 
 ## Stop Conditions
 

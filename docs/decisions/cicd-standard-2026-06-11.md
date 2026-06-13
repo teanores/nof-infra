@@ -1,6 +1,6 @@
 # CI/CD Standard Decision - 2026-06-11
 
-Status: accepted working standard for June beta hardening.
+Status: accepted working standard for June beta hardening; updated on 2026-06-13 after nof-mp v0.2.35 UAT.
 Owner: nof-main / nof-infra.
 Tracker: `NOF-INFRA-SPRINT-CICD-20260611`, task `MANUAL-INFRA-CICD-STANDARD`.
 
@@ -15,6 +15,8 @@ NOF currently has more than one production delivery path:
 
 This hybrid works, but it is operational technical debt. Agents must not guess which path owns a service during release work.
 
+Recent nof-mp releases exposed a process ambiguity: the agent pushed service tags and `nof-infra` desired-state, then also invoked `/opt/nof-release-builder/nof-release-builder.sh deploy ...` over SSH. That is reliable for a supervised hotfix, but it is not the target automation model because GitHub state, hbl timer state and chat approval can drift.
+
 ## Decision
 
 The canonical production deployment model for NOF services is:
@@ -25,6 +27,19 @@ service repository tag
   -> hbl MicroK8s / Helm release
   -> owner UAT acceptance
 ```
+
+The target operating mode is an approved desired-state release:
+
+```text
+service repository semver tag
+  -> local service checks and nof-infra preflight
+  -> nof-infra desired-state update for exactly one approved service/tag
+  -> hbl release-builder sync/timer applies the approved row
+  -> release-builder writes evidence and rollback data
+  -> agent reads evidence and requests owner UAT
+```
+
+Direct SSH invocation of `nof-release-builder.sh deploy <service> <tag>` is allowed only as an explicitly named manual release-builder mode for a supervised hotfix, incident recovery, or automation outage. It must not be described as GitHub-driven automation in owner communication.
 
 `nof-infra` owns:
 
@@ -70,6 +85,14 @@ Before deploy approval, the agent must state in chat:
 - rollback command or first-revision rollback note;
 - exact UAT scenarios and expected results.
 
+The agent must also state the deploy mode:
+
+- `desired-state automation`: push tag and nof-infra desired-state, then wait for hbl sync/timer or a documented pull agent;
+- `manual release-builder`: direct SSH invocation of the hbl release-builder command after approval;
+- `legacy GitHub Actions`: temporary nof-ht exception only.
+
+If the deploy mode is `manual release-builder`, the post-release evidence must explicitly say that the rollout was direct SSH, not passive GitHub automation.
+
 ## Version Policy
 
 Production deploys must use semver tags such as `v0.2.17` or `v1.33.51`.
@@ -88,8 +111,19 @@ Stop before deploy if:
 - secret values would be printed, copied into docs, or committed;
 - no rollback path is known.
 
+Stop before relying on desired-state automation if:
+
+- hbl `nof-release-builder-sync.timer` status has not been read recently;
+- the sync service still points at a legacy control repo or manifest path;
+- the sync cadence, last run and evidence path are unknown;
+- desired-state has enabled rows for services not approved in the current release window;
+- another agent has uncommitted nof-infra changes that could be accidentally pushed with the release-control commit.
+
 ## Follow-Up Tasks
 
 - `MANUAL-INFRA-DESIRED-STATE`: align and document hbl desired-state.
 - `MANUAL-INFRA-RUNNER-HEALTH`: document hbl runner health/backoff while nof-ht remains on the legacy path.
 - `MANUAL-INFRA-PREFLIGHT`: verify release-builder preflight and readiness checks.
+- `IDEA-20260613-160A72`: create a dedicated `nof-infra` tracker project and convert this release automation standard into project-scoped epics/tasks.
+- Add a single approved-release command or script that prepares service tag, updates desired-state, runs preflight and prints the exact owner briefing without running production changes.
+- Verify whether hbl sync/timer can safely replace direct SSH deploys for `nof-mp` and `nof-tt`, then make manual deploy emergency-only.
