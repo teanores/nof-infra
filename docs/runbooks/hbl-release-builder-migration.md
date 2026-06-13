@@ -144,6 +144,14 @@ Expected:
 - no secret values are printed in systemd status or journal output;
 - broad sync cannot apply unapproved enabled service rows during a one-service release window.
 
+The local release-builder now supports `NOF_RELEASE_SYNC_APPROVED_SERVICES` for sync mode. When this comma-separated allowlist is set, enabled manifest rows outside the list are skipped:
+
+```bash
+NOF_RELEASE_SYNC_APPROVED_SERVICES=nof-mp /opt/nof-release-builder/nof-release-builder.sh sync main
+```
+
+This is a code-level guard, but it is not effective on hbl until the updated script is installed and the systemd unit/timer is configured to pass the intended allowlist for the release window.
+
 2026-06-13 status against these expectations:
 
 - timer active: yes;
@@ -151,11 +159,13 @@ Expected:
 - control repo: yes, `nof-infra`;
 - manifest path: yes, `environments/hbl/desired-state.tsv`;
 - evidence/logs: yes, journal shows deploy/skip decisions and release-builder writes evidence;
-- broad sync isolation: not yet. The sync iterates all enabled rows, so one-service release safety depends on desired-state discipline and preflight, not on hbl enforcing an approved-services allowlist.
+- broad sync isolation: implemented locally through `NOF_RELEASE_SYNC_APPROVED_SERVICES`, not yet installed/configured on hbl.
 
 If any expectation is not met, keep using explicitly approved `manual release-builder` mode for production hotfixes and treat automation as blocked.
 
 Because broad sync isolation is not yet enforced on hbl, agents must not push desired-state changes casually. A pushed enabled row can be deployed by the timer within minutes.
+
+Before switching routine releases to desired-state automation, install the updated release-builder script on hbl and configure the sync service or release-window wrapper so `NOF_RELEASE_SYNC_APPROVED_SERVICES` contains only the owner-approved service keys.
 
 ## Release Mode Checklist
 

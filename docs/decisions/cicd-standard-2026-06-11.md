@@ -126,4 +126,5 @@ Stop before relying on desired-state automation if:
 - `MANUAL-INFRA-PREFLIGHT`: verify release-builder preflight and readiness checks.
 - `IDEA-20260613-160A72`: create a dedicated `nof-infra` tracker project and convert this release automation standard into project-scoped epics/tasks.
 - Add a single approved-release command or script that prepares service tag, updates desired-state, runs preflight and prints the exact owner briefing without running production changes.
-- Verify whether hbl sync/timer can safely replace direct SSH deploys for `nof-mp` and `nof-tt`, then make manual deploy emergency-only.
+- Install and configure the release-builder sync allowlist guard `NOF_RELEASE_SYNC_APPROVED_SERVICES` on hbl, then verify whether hbl sync/timer can safely replace direct SSH deploys for `nof-mp` and `nof-tt`.
+- After the allowlist guard is proven in a controlled release window, make manual deploy emergency-only.

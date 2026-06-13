@@ -148,6 +148,27 @@ require_migration_gate_ready() {
   esac
 }
 
+sync_service_is_approved() {
+  local service="$1"
+  local allowlist="${NOF_RELEASE_SYNC_APPROVED_SERVICES:-}"
+  local approved
+
+  if [[ -z "$allowlist" ]]; then
+    return 0
+  fi
+
+  IFS=',' read -r -a approved <<< "$allowlist"
+  for item in "${approved[@]}"; do
+    item="${item#"${item%%[![:space:]]*}"}"
+    item="${item%"${item##*[![:space:]]}"}"
+    if [[ "$item" == "$service" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 redact_secrets_from_stream() {
   sed -E \
     -e 's#postgres(ql)?://[^[:space:]]+#postgres://<redacted>#g' \
@@ -437,6 +458,10 @@ sync_from_manifest() {
     [[ -z "${service:-}" || "$service" == \#* ]] && continue
     if [[ "$enabled" != "true" ]]; then
       echo "==> Skipping $service: enabled=$enabled"
+      continue
+    fi
+    if ! sync_service_is_approved "$service"; then
+      echo "==> Skipping $service: not in NOF_RELEASE_SYNC_APPROVED_SERVICES"
       continue
     fi
     sanitize_ref "$ref"
