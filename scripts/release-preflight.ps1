@@ -171,13 +171,13 @@ if ($Service -eq "nof-ht") {
 
   $nofHtValuesText = Get-Content $nofHtValues -Raw
   if (!$nofHtValuesText.Contains('telegramHabitBotUsername: "naragothal_bot"')) {
-    Fail "nof-ht product bot username must be naragothal_bot in Helm values."
+    Fail "nof-ht shared public NOF bot username must be naragothal_bot in Helm values."
   }
   if ($nofHtValuesText.Contains('telegramBotUsername: "test_elf_nof_bot"')) {
     Fail "nof-ht Helm values must not use legacy test_elf_nof_bot as sentinel/linking bot username."
   }
   if ($nofHtValuesText.Contains('telegramHabitBotUsername: "test_elf_nof_bot"')) {
-    Fail "nof-ht Helm values must not use legacy test_elf_nof_bot as product bot username."
+    Fail "nof-ht Helm values must not use legacy test_elf_nof_bot as shared public NOF bot username."
   }
 
   Info "nof-ht habit-bot chart wiring is present; live cluster secret existence still requires release-window verification"

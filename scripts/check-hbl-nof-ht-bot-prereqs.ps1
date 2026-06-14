@@ -59,7 +59,7 @@ Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_TOKEN length=" "Missing
 Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET length=" "Missing TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET in nof-ht-secrets."
 Assert-Contains $habitText "TELEGRAM_HABIT_BOT_TOKEN length=" "Missing TELEGRAM_HABIT_BOT_TOKEN in nof-ht-habit-bot-secrets."
 Assert-Contains $habitText "TELEGRAM_HABIT_BOT_WEBHOOK_SECRET length=" "Missing TELEGRAM_HABIT_BOT_WEBHOOK_SECRET in nof-ht-habit-bot-secrets."
-Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME=naragothal_bot" "nof-ht ConfigMap must point product bot username to naragothal_bot."
+Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME=naragothal_bot" "nof-ht ConfigMap must point shared public NOF bot username to naragothal_bot."
 Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=nof_sentinel_bot" "nof-ht ConfigMap must point linking/sentinel username to nof_sentinel_bot."
 
 Write-Host "[hbl-bot-prereqs] nof-ht bot prerequisites: ok"

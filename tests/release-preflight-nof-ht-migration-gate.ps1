@@ -98,7 +98,7 @@ try {
     }
 
     if (!$failedWithLegacyBot) {
-      throw "Expected nof-ht preflight to fail when legacy test_elf_nof_bot is used as product bot username"
+      throw "Expected nof-ht preflight to fail when legacy test_elf_nof_bot is used as shared public NOF bot username"
     }
   } finally {
     [System.IO.File]::WriteAllText($values, $originalValues, $utf8NoBom)
