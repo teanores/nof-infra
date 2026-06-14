@@ -29,9 +29,9 @@ function Assert-Contains {
   }
 }
 
-$sentinelSecretCommand = "sudo microk8s kubectl get secret nof-ht-secrets -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf ""%s length=%d\n"" `$k (len `$v)}}{{end}}'"
-$habitSecretCommand = "sudo microk8s kubectl get secret nof-ht-habit-bot-secrets -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf ""%s length=%d\n"" `$k (len `$v)}}{{end}}'"
-$configCommand = "sudo microk8s kubectl get configmap nof-ht-config -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf ""%s=%s\n"" `$k `$v}}{{end}}'"
+$sentinelSecretCommand = "sudo microk8s kubectl get secret nof-ht-secrets -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf \`"%s length=%d\n\`" `$k (len `$v)}}{{end}}'"
+$habitSecretCommand = "sudo microk8s kubectl get secret nof-ht-habit-bot-secrets -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf \`"%s length=%d\n\`" `$k (len `$v)}}{{end}}'"
+$configCommand = "sudo microk8s kubectl get configmap nof-ht-config -n $Namespace -o go-template='{{range `$k,`$v := .data}}{{printf \`"%s=%s\n\`" `$k `$v}}{{end}}'"
 
 $sentinelSecret = Invoke-HblReadOnly $sentinelSecretCommand
 $habitSecret = Invoke-HblReadOnly $habitSecretCommand
@@ -45,6 +45,15 @@ if ($PrintCommandsOnly) {
 $sentinelText = ($sentinelSecret -join "`n")
 $habitText = ($habitSecret -join "`n")
 $configText = ($config -join "`n")
+
+Write-Host "[hbl-bot-prereqs] nof-ht-secrets keys:"
+Write-Host $sentinelText
+Write-Host "[hbl-bot-prereqs] nof-ht-habit-bot-secrets keys:"
+Write-Host $habitText
+Write-Host "[hbl-bot-prereqs] nof-ht-config Telegram usernames:"
+($configText -split "`n" | Where-Object { $_ -like "NEXT_PUBLIC_TELEGRAM*USERNAME=*" }) | ForEach-Object {
+  Write-Host $_
+}
 
 Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_TOKEN length=" "Missing TELEGRAM_NOF_SENTINEL_BOT_TOKEN in nof-ht-secrets."
 Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET length=" "Missing TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET in nof-ht-secrets."
