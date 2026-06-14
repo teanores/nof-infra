@@ -137,7 +137,24 @@ actions.runner.teanores-nof-infra.hbl-runner.service
 
 Registration requires a short-lived GitHub runner registration token from the `teanores/nof-infra` repository settings. Do not paste that token into chat, Wiki, tracker or git.
 
-Owner/manual setup outline:
+Preferred setup helper:
+
+```bash
+ssh nofadminhbl@192.168.1.51
+cd /tmp
+git clone https://github.com/teanores/nof-infra.git nof-infra-runner-setup
+cd nof-infra-runner-setup
+
+# Copy RUNNER_PACKAGE_URL and RUNNER_PACKAGE_SHA256 from GitHub's official
+# "New self-hosted runner" Linux x64 instructions for teanores/nof-infra.
+RUNNER_PACKAGE_URL='<official-package-url>' \
+RUNNER_PACKAGE_SHA256='<official-sha256>' \
+  bash scripts/hbl-install-nof-infra-github-runner.sh
+```
+
+The helper reads the registration token from a hidden prompt. Do not provide the token as a command-line argument.
+
+Manual setup outline:
 
 ```bash
 ssh nofadminhbl@192.168.1.51

@@ -22,17 +22,19 @@ check-runner-production:
   .\scripts\check-github-runner-readiness.ps1
 
 test-bash-git:
+  & 'C:\Program Files\Git\bin\bash.exe' -n scripts/hbl-install-nof-infra-github-runner.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
 
 test-bash-wsl:
-  wsl bash -lc "cd /mnt/c/Users/User/Documents/dev/NOF/nof-infra && bash tests/release-builder-version-policy.sh && bash tests/release-builder-migration-gate.sh"
+  wsl bash -lc "cd /mnt/c/Users/User/Documents/dev/NOF/nof-infra && bash -n scripts/hbl-install-nof-infra-github-runner.sh && bash tests/release-builder-version-policy.sh && bash tests/release-builder-migration-gate.sh"
 
 test-all:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
   .\tests\github-runner-workflow-policy.ps1
   .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
+  & 'C:\Program Files\Git\bin\bash.exe' -n scripts/hbl-install-nof-infra-github-runner.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
