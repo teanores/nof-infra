@@ -68,14 +68,14 @@ Implication: hbl desired-state automation is already active enough to deploy a p
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
 - nof-ht chart source after migration: `nof-infra/helm/nof-ht`
 
-### nof-ht Habit Bot Secret Gate
+### nof-ht Shared Public Bot Secret Gate
 
-The nof-ht chart includes product bot plumbing from TD-12:
+The nof-ht chart includes shared public NOF bot plumbing from TD-12. The environment names remain service-local for compatibility, but `@naragothal_bot` is not a habit-only bot:
 
 - public config: `NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME`;
 - value: `telegramHabitBotUsername`;
 - Kubernetes secretRef: `nof-ht-habit-bot-secrets`.
-- current product bot username: `naragothal_bot` (`@naragothal_bot`);
+- current shared public NOF product/community bot username: `naragothal_bot` (`@naragothal_bot`);
 - identity/linking bot username: `nof_sentinel_bot` (`@nof_sentinel_bot`).
 
 The secret must exist before deploying this chart in production. Required keys:
@@ -89,7 +89,7 @@ Do not write secret values in git, Wiki, tracker, shell output or chat.
 
 `test_elf_nof_bot` is legacy evidence only and must not be used as a live Helm default or runtime fallback.
 
-Compliance boundary: this is not Telegram authorization. Telegram auth remains disabled by compliance decision; this secret is only for product bot notifications/webhooks after normal email/platform authentication.
+Compliance boundary: this is not Telegram authorization. Telegram auth remains disabled by compliance decision; this secret is only for public NOF bot notifications/webhooks after normal email/platform authentication.
 
 Before a nof-ht release window, print the read-only verification commands:
 
@@ -108,7 +108,7 @@ Expected:
 - `nof-ht-secrets` contains `TELEGRAM_NOF_SENTINEL_BOT_TOKEN` and `TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET`;
 - `nof-ht-habit-bot-secrets` contains `TELEGRAM_HABIT_BOT_TOKEN` and `TELEGRAM_HABIT_BOT_WEBHOOK_SECRET`;
 - ConfigMap points sentinel/linking username to `nof_sentinel_bot`;
-- ConfigMap points product username to `naragothal_bot`;
+- ConfigMap points shared public NOF bot username to `naragothal_bot`;
 - output prints only key names and encoded lengths, never secret values.
 
 ## CI/CD Standard Decision

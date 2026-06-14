@@ -11,7 +11,8 @@ nextauthUrl: "https://habit-tracker.forgath.ru"
 canonicalUrl: "https://habit-tracker.forgath.ru"
 telegramBotUsername: "nof_sentinel_bot"
 telegramBotId: "8750634200"
-# Product bot (habits/LLM/ideas). Identity/linking bot is @nof_sentinel_bot.
+# Shared public NOF community/product bot. nof-ht uses it for habits/LLM/ideas.
+# Identity/linking bot is @nof_sentinel_bot.
 telegramHabitBotUsername: "naragothal_bot"
 appVersion: "1.33.59"
 
