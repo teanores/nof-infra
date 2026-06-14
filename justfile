@@ -28,6 +28,9 @@ check-ht-bot-prereqs-dry-run:
 check-ht-bot-prereqs:
   .\scripts\check-hbl-nof-ht-bot-prereqs.ps1
 
+check-ht-bot-live:
+  .\scripts\check-hbl-nof-ht-bot-prereqs.ps1 -ExpectLiveConfig
+
 test-bash-git:
   & 'C:\Program Files\Git\bin\bash.exe' -n scripts/hbl-install-nof-infra-github-runner.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh

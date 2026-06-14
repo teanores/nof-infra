@@ -107,6 +107,17 @@ Expected:
 
 - `nof-ht-secrets` contains `TELEGRAM_NOF_SENTINEL_BOT_TOKEN` and `TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET`;
 - `nof-ht-habit-bot-secrets` contains `TELEGRAM_HABIT_BOT_TOKEN` and `TELEGRAM_HABIT_BOT_WEBHOOK_SECRET`;
+- pre-deploy ConfigMap may still show legacy values; that is the rollout target, not a prereq failure;
+- output prints only key names and encoded lengths, never secret values.
+
+After deploy, run:
+
+```powershell
+just check-ht-bot-live
+```
+
+Expected:
+
 - ConfigMap points sentinel/linking username to `nof_sentinel_bot`;
 - ConfigMap points shared public NOF bot username to `naragothal_bot`;
 - output prints only key names and encoded lengths, never secret values.

@@ -1,6 +1,7 @@
 param(
   [string]$SshTarget = "nofadminhbl@192.168.1.51",
   [string]$Namespace = "nof-apps",
+  [switch]$ExpectLiveConfig,
   [switch]$PrintCommandsOnly
 )
 
@@ -59,8 +60,18 @@ Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_TOKEN length=" "Missing
 Assert-Contains $sentinelText "TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET length=" "Missing TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET in nof-ht-secrets."
 Assert-Contains $habitText "TELEGRAM_HABIT_BOT_TOKEN length=" "Missing TELEGRAM_HABIT_BOT_TOKEN in nof-ht-habit-bot-secrets."
 Assert-Contains $habitText "TELEGRAM_HABIT_BOT_WEBHOOK_SECRET length=" "Missing TELEGRAM_HABIT_BOT_WEBHOOK_SECRET in nof-ht-habit-bot-secrets."
-Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME=naragothal_bot" "nof-ht ConfigMap must point shared public NOF bot username to naragothal_bot."
-Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=nof_sentinel_bot" "nof-ht ConfigMap must point linking/sentinel username to nof_sentinel_bot."
+
+if ($ExpectLiveConfig) {
+  Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME=naragothal_bot" "nof-ht ConfigMap must point shared public NOF bot username to naragothal_bot."
+  Assert-Contains $configText "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=nof_sentinel_bot" "nof-ht ConfigMap must point linking/sentinel username to nof_sentinel_bot."
+} else {
+  if (!$configText.Contains("NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME=naragothal_bot")) {
+    Write-Host "[hbl-bot-prereqs] live ConfigMap does not point shared public NOF bot username to naragothal_bot yet; this is expected before the v1.33.59 deploy and must pass in post-deploy check."
+  }
+  if (!$configText.Contains("NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=nof_sentinel_bot")) {
+    Write-Host "[hbl-bot-prereqs] live ConfigMap does not point linking/sentinel username to nof_sentinel_bot yet; this is expected before the v1.33.59 deploy and must pass in post-deploy check."
+  }
+}
 
 Write-Host "[hbl-bot-prereqs] nof-ht bot prerequisites: ok"
 Write-Host "[hbl-bot-prereqs] secret values were not printed; only key presence and encoded lengths were inspected."
