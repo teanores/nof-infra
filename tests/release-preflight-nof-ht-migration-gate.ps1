@@ -69,6 +69,41 @@ try {
     [System.IO.File]::WriteAllText($deployment, $originalDeployment, $utf8NoBom)
   }
 
+  $values = Join-Path $repoRoot "helm\nof-ht\values.yaml"
+  $originalValues = Get-Content $values -Raw
+  try {
+    $legacyValues = $originalValues -replace 'telegramHabitBotUsername: "naragothal_bot"', 'telegramHabitBotUsername: "test_elf_nof_bot"'
+    if ($legacyValues -eq $originalValues) {
+      throw "Test setup failed: naragothal_bot marker was not found in nof-ht values.yaml"
+    }
+    [System.IO.File]::WriteAllText($values, $legacyValues, $utf8NoBom)
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+      $legacyBotOutput = & powershell.exe `
+        -NoLogo `
+        -NoProfile `
+        -ExecutionPolicy Bypass `
+        -File $script `
+        -Service nof-ht `
+        -ExpectedRef v1.33.51 `
+        -Environment $fixtureEnv `
+        -ExpectedEnabled true `
+        -NofHtMigrationGateApproved `
+        -NofHtMigrationEvidence "test-evidence" 2>&1
+      $failedWithLegacyBot = $LASTEXITCODE -ne 0
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    if (!$failedWithLegacyBot) {
+      throw "Expected nof-ht preflight to fail when legacy test_elf_nof_bot is used as product bot username"
+    }
+  } finally {
+    [System.IO.File]::WriteAllText($values, $originalValues, $utf8NoBom)
+  }
+
   Write-Host "release-preflight nof-ht migration gate: ok"
 } finally {
   Remove-Item Env:\NOF_RELEASE_PREFLIGHT_ALLOW_DIRTY_FOR_TESTS -ErrorAction SilentlyContinue

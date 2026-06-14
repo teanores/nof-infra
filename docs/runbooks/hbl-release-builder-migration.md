@@ -75,6 +75,8 @@ The nof-ht chart includes product bot plumbing from TD-12:
 - public config: `NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME`;
 - value: `telegramHabitBotUsername`;
 - Kubernetes secretRef: `nof-ht-habit-bot-secrets`.
+- current product bot username: `naragothal_bot` (`@naragothal_bot`);
+- identity/linking bot username: `nof_sentinel_bot` (`@nof_sentinel_bot`).
 
 The secret must exist before deploying this chart in production. Required keys:
 
@@ -85,7 +87,7 @@ TELEGRAM_HABIT_BOT_WEBHOOK_SECRET
 
 Do not write secret values in git, Wiki, tracker, shell output or chat.
 
-Until the production bot is registered in BotFather, `telegramHabitBotUsername` may remain the `test_elf_nof_bot` placeholder. That keeps the chart explicit while making product-bot functionality unavailable rather than silently ambiguous.
+`test_elf_nof_bot` is legacy evidence only and must not be used as a live Helm default or runtime fallback.
 
 Compliance boundary: this is not Telegram authorization. Telegram auth remains disabled by compliance decision; this secret is only for product bot notifications/webhooks after normal email/platform authentication.
 
