@@ -91,6 +91,26 @@ Do not write secret values in git, Wiki, tracker, shell output or chat.
 
 Compliance boundary: this is not Telegram authorization. Telegram auth remains disabled by compliance decision; this secret is only for product bot notifications/webhooks after normal email/platform authentication.
 
+Before a nof-ht release window, print the read-only verification commands:
+
+```powershell
+just check-ht-bot-prereqs-dry-run
+```
+
+During an approved hbl read-only verification window, run:
+
+```powershell
+just check-ht-bot-prereqs
+```
+
+Expected:
+
+- `nof-ht-secrets` contains `TELEGRAM_NOF_SENTINEL_BOT_TOKEN` and `TELEGRAM_NOF_SENTINEL_BOT_WEBHOOK_SECRET`;
+- `nof-ht-habit-bot-secrets` contains `TELEGRAM_HABIT_BOT_TOKEN` and `TELEGRAM_HABIT_BOT_WEBHOOK_SECRET`;
+- ConfigMap points sentinel/linking username to `nof_sentinel_bot`;
+- ConfigMap points product username to `naragothal_bot`;
+- output prints only key names and encoded lengths, never secret values.
+
 ## CI/CD Standard Decision
 
 Decision record: `../decisions/cicd-standard-2026-06-11.md`.
