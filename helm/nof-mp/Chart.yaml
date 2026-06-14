@@ -1,6 +1,6 @@
 apiVersion: v2
 name: nof-mp
-description: NOF Platform frontend - central portal for Dragon Forge
+description: NOF Main Platform frontend and shared identity portal
 type: application
 version: 0.1.0
 appVersion: "0.2.0"

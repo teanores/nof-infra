@@ -68,6 +68,52 @@ Implication: hbl desired-state automation is already active enough to deploy a p
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
 - nof-ht chart source after migration: `nof-infra/helm/nof-ht`
 
+### nof-service Internal Service Alias
+
+The current nof-mp login and public registration bridge still calls the legacy
+service through `NOF_SERVICE_INTERNAL_URL`.
+
+Read-only hbl discovery on 2026-06-14 showed that Kubernetes still exposes the
+legacy service names:
+
+- `dragon-forge`
+- `dragon-forge-internal`
+
+Until a canonical alias exists, nof-mp must keep the runtime fallback
+`http://dragon-forge-internal:5000`. This is migration debt, not an accepted
+new naming pattern.
+
+Target:
+
+- keep repository and product boundary name: `nof-service`;
+- add or rename a Kubernetes Service alias named `nof-service-internal`;
+- switch nof-mp `NOF_SERVICE_INTERNAL_URL` to `http://nof-service-internal:5000`;
+- keep `dragon-forge-internal` only as rollback compatibility during one
+  accepted release window;
+- remove the legacy Service only after login, registration, password recovery
+  and platform profile UAT pass.
+
+Safe migration order:
+
+1. Inventory current Service selector, endpoints and consumers by metadata only.
+2. Add a `nof-service-internal` Service alias with the same selector/ports.
+3. Verify from inside the cluster that both service DNS names reach the same
+   legacy bridge without printing secrets or user data.
+4. Update the nof-mp Helm value `NOF_SERVICE_INTERNAL_URL` to
+   `http://nof-service-internal:5000`.
+5. Deploy nof-mp through an approved one-service release window.
+6. UAT login, registration request/confirm, password reset, profile and service
+   OAuth launches.
+7. Remove `dragon-forge-internal` only after rollback no longer needs it.
+
+Stop conditions:
+
+- no current selector/endpoints can be confirmed read-only;
+- any command would print secret values, DB URLs or user data;
+- the alias points to different endpoints than `dragon-forge-internal`;
+- nof-mp login/registration/password recovery fails in local or production UAT;
+- rollback cannot restore the previous internal URL or Service.
+
 ### nof-ht Shared Public Bot Secret Gate
 
 The nof-ht chart includes shared public NOF bot plumbing from TD-12. The environment names remain service-local for compatibility, but `@naragothal_bot` is not a habit-only bot:
