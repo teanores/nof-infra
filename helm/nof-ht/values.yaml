@@ -9,10 +9,10 @@ replicas: 1
 # nof-ht-secrets and nof-ht-oauth-secrets, never in this repository.
 nextauthUrl: "https://habit-tracker.forgath.ru"
 canonicalUrl: "https://habit-tracker.forgath.ru"
-telegramBotUsername: "test_elf_nof_bot"
+telegramBotUsername: "nof_sentinel_bot"
 telegramBotId: "8750634200"
-# Product bot (habits/LLM/ideas) — set to actual bot username after BotFather registration
-telegramHabitBotUsername: "test_elf_nof_bot"
+# Product bot (habits/LLM/ideas). Identity/linking bot is @nof_sentinel_bot.
+telegramHabitBotUsername: "naragothal_bot"
 appVersion: "1.33.58"
 
 resources:
