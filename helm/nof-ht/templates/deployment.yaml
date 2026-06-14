@@ -26,6 +26,8 @@ spec:
                 name: nof-ht-secrets
             - secretRef:
                 name: nof-ht-oauth-secrets
+            - secretRef:
+                name: nof-ht-habit-bot-secrets
             - configMapRef:
                 name: nof-ht-config
           resources:
