@@ -4,4 +4,4 @@
 # hbl nof-release-builder-sync.timer may treat enabled rows as production-bound after push to the active control branch.
 nof-mp	v0.2.35	false
 nof-tt	v0.2.5	false
-nof-ht	v1.33.56	false
+nof-ht	v1.33.59	false

@@ -43,7 +43,7 @@ Current nof-infra release-builder already knows service key `nof-ht`, but keeps 
    - current: `nof-ht/charts/nof-ht`;
    - action: copy/adapt the chart into `nof-infra` and make release-builder use the nof-infra chart source.
 2. Version policy:
-   - target: production deploy ref is a semver tag such as `v1.33.51`;
+   - target: production deploy ref is a semver tag such as `v1.33.59`;
    - current workflow image tag is short commit SHA;
    - release-builder already derives public `NEXT_PUBLIC_APP_VERSION` from semver tag.
 3. Migration execution:
@@ -66,7 +66,7 @@ Current nof-infra release-builder already knows service key `nof-ht`, but keeps 
    - Release standard: `docs/decisions/nof-ht-db-migration-release-standard-2026-06-11.md`.
    - Preferred target: one-shot Kubernetes Job using the approved nof-ht image tag, existing secret mounts and a service-owned migration command.
 4. Run local nof-infra preflight for:
-   - `nof-ht v1.33.51 enabled=false`;
+   - `nof-ht <approved-nof-ht-tag> enabled=false`;
    - production-mode guard with nof-ht disabled.
 5. Ask owner for a dedicated nof-ht migration deploy window only after local checks pass.
    - Use `nof-ht-release-builder-controlled-uat-window.md`.

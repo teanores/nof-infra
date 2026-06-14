@@ -13,7 +13,7 @@ telegramBotUsername: "nof_sentinel_bot"
 telegramBotId: "8750634200"
 # Product bot (habits/LLM/ideas). Identity/linking bot is @nof_sentinel_bot.
 telegramHabitBotUsername: "naragothal_bot"
-appVersion: "1.33.58"
+appVersion: "1.33.59"
 
 resources:
   requests:

@@ -81,7 +81,7 @@ Local, before hbl changes:
 ```powershell
 .\scripts\release-preflight.ps1 `
   -Service nof-ht `
-  -ExpectedRef v1.33.51 `
+  -ExpectedRef <approved-nof-ht-tag> `
   -Environment hbl `
   -ExpectedEnabled false
 ```

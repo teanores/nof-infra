@@ -93,15 +93,15 @@ GitHub Actions may remain useful for service-local CI checks, but production dep
 
 `nof-ht` remains a temporary legacy exception on GitHub Actions until `MANUAL-INFRA-RUNNER-HEALTH` and a dedicated migration task close the runner/backoff and release-builder parity gaps.
 
-## Current Release Alignment - 2026-06-10
+## Current Release Alignment - 2026-06-14
 
 Local service repository tags currently verified:
 
 | Service | Current tag | Desired-state row | Notes |
 | --- | --- | --- | --- |
-| `nof-mp` | `v0.2.17` | `v0.2.17`, enabled | Auth/compliance release accepted locally; any hbl sync still requires owner release approval. |
-| `nof-tt` | `v0.2.5` | `v0.2.5`, enabled | Telegram-auth cleanup release accepted locally; Task Tracker MCP endpoint remains `task-tracker.forgath.ru/api/mcp`. |
-| `nof-ht` | `v1.33.51` | `v1.33.51`, disabled | nof-ht uses GitHub Actions runner path today; release-builder row remains disabled until CI/CD standard decision. |
+| `nof-mp` | `v0.2.35` | `v0.2.35`, disabled | Routine deploys must use one explicitly approved release mode per window. |
+| `nof-tt` | `v0.2.5` | `v0.2.5`, disabled | Task Tracker MCP endpoint remains `task-tracker.forgath.ru/api/mcp`; routine deploys remain release-window scoped. |
+| `nof-ht` | `v1.33.59` pending tag | `v1.33.59`, disabled | nof-ht has naragothal product-bot readiness changes after `v1.33.58`; release requires a fresh semver tag and owner-approved window. |
 
 Do not push desired-state changes to the control branch as a side effect of documentation work. A pushed enabled row can become production-bound if hbl sync is active.
 

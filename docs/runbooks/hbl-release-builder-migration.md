@@ -30,10 +30,10 @@ Local `nof-infra` state after bootstrap:
 - release-builder script default control repo is `https://github.com/teanores/nof-infra.git`;
 - default control manifest is `environments/hbl/desired-state.tsv`;
 - supported release-builder service keys are `nof-mp`, `nof-tt`, `nof-ht`;
-- current local desired-state rows on 2026-06-10:
-  - `nof-mp` -> `v0.2.17`, enabled;
-  - `nof-tt` -> `v0.2.5`, enabled;
-  - `nof-ht` -> `v1.33.51`, disabled because nof-ht currently uses the GitHub Actions runner path.
+- current local desired-state rows on 2026-06-14:
+  - `nof-mp` -> `v0.2.35`, disabled;
+  - `nof-tt` -> `v0.2.5`, disabled;
+  - `nof-ht` -> `v1.33.59`, disabled because nof-ht still needs a dedicated release window for the naragothal product-bot readiness release.
 
 Use read-only hbl discovery before changing any hbl service, timer, Helm release or Kubernetes object. The local repository state is not proof that the hbl host has the same script installed.
 
@@ -215,7 +215,7 @@ This guard is effective on hbl only after the updated script is installed and th
 - evidence/logs: yes, journal shows deploy/skip decisions and release-builder writes evidence;
 - broad sync isolation: implemented through `NOF_RELEASE_SYNC_APPROVED_SERVICES`;
 - fail-closed timer mode: installed on hbl through `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1` and `NOF_RELEASE_SYNC_APPROVED_SERVICES=none`;
-- repository desired-state policy: not clean yet; local `environments/hbl/desired-state.tsv` still has multiple enabled rows and must be corrected before routine desired-state automation is considered ready.
+- repository desired-state policy: clean locally; routine desired-state automation still requires a one-service owner-approved release window before enabling any row.
 
 If any expectation is not met, keep using explicitly approved `manual release-builder` mode for production hotfixes and treat automation as blocked.
 
