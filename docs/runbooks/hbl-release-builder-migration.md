@@ -68,6 +68,27 @@ Implication: hbl desired-state automation is already active enough to deploy a p
 - OAuth secret resource names: `nof-mp-oauth-secrets`, `nof-tt-oauth-secrets`, `nof-ht-oauth-secrets`
 - nof-ht chart source after migration: `nof-infra/helm/nof-ht`
 
+### nof-ht Habit Bot Secret Gate
+
+The nof-ht chart includes product bot plumbing from TD-12:
+
+- public config: `NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME`;
+- value: `telegramHabitBotUsername`;
+- Kubernetes secretRef: `nof-ht-habit-bot-secrets`.
+
+The secret must exist before deploying this chart in production. Required keys:
+
+```text
+TELEGRAM_HABIT_BOT_TOKEN
+TELEGRAM_HABIT_BOT_WEBHOOK_SECRET
+```
+
+Do not write secret values in git, Wiki, tracker, shell output or chat.
+
+Until the production bot is registered in BotFather, `telegramHabitBotUsername` may remain the `test_elf_nof_bot` placeholder. That keeps the chart explicit while making product-bot functionality unavailable rather than silently ambiguous.
+
+Compliance boundary: this is not Telegram authorization. Telegram auth remains disabled by compliance decision; this secret is only for product bot notifications/webhooks after normal email/platform authentication.
+
 ## CI/CD Standard Decision
 
 Decision record: `../decisions/cicd-standard-2026-06-11.md`.

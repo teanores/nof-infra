@@ -142,6 +142,36 @@ foreach ($name in $forbiddenLegacyRuntimeNames) {
   }
 }
 
+if ($Service -eq "nof-ht") {
+  $nofHtConfigMap = Join-Path $repoRoot "helm\nof-ht\templates\configmap.yaml"
+  $nofHtDeployment = Join-Path $repoRoot "helm\nof-ht\templates\deployment.yaml"
+  $nofHtValues = Join-Path $repoRoot "helm\nof-ht\values.yaml"
+  $nofHtRunbook = Join-Path $repoRoot "docs\runbooks\hbl-release-builder-migration.md"
+
+  foreach ($requiredFile in @($nofHtConfigMap, $nofHtDeployment, $nofHtValues, $nofHtRunbook)) {
+    if (!(Test-Path $requiredFile)) {
+      Fail "nof-ht habit-bot preflight file is missing: $requiredFile"
+    }
+  }
+
+  $nofHtHabitBotMarkers = @(
+    [pscustomobject]@{ Path = $nofHtConfigMap; Marker = "NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME" },
+    [pscustomobject]@{ Path = $nofHtValues; Marker = "telegramHabitBotUsername" },
+    [pscustomobject]@{ Path = $nofHtDeployment; Marker = "nof-ht-habit-bot-secrets" },
+    [pscustomobject]@{ Path = $nofHtRunbook; Marker = "TELEGRAM_HABIT_BOT_TOKEN" },
+    [pscustomobject]@{ Path = $nofHtRunbook; Marker = "TELEGRAM_HABIT_BOT_WEBHOOK_SECRET" }
+  )
+
+  foreach ($requirement in $nofHtHabitBotMarkers) {
+    $fileText = Get-Content $requirement.Path -Raw
+    if (!$fileText.Contains($requirement.Marker)) {
+      Fail "nof-ht habit-bot preflight marker is missing: $($requirement.Marker)"
+    }
+  }
+
+  Info "nof-ht habit-bot chart wiring is present; live cluster secret existence still requires release-window verification"
+}
+
 Info "desired-state: $Service -> $ExpectedRef enabled=$($row.Enabled)"
 if (!$ApprovedProductionDeploy) {
   Info "production deploy approval flag was not set; this was a local guard only"

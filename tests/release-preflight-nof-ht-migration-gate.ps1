@@ -42,6 +42,33 @@ try {
     -NofHtMigrationGateApproved `
     -NofHtMigrationEvidence "test-evidence"
 
+  $deployment = Join-Path $repoRoot "helm\nof-ht\templates\deployment.yaml"
+  $originalDeployment = Get-Content $deployment -Raw
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  try {
+    $brokenDeployment = $originalDeployment -replace "            - secretRef:\r?\n                name: nof-ht-habit-bot-secrets\r?\n", ""
+    [System.IO.File]::WriteAllText($deployment, $brokenDeployment, $utf8NoBom)
+
+    $failedWithoutHabitBotSecret = $false
+    try {
+      & $script `
+        -Service nof-ht `
+        -ExpectedRef v1.33.51 `
+        -Environment $fixtureEnv `
+        -ExpectedEnabled true `
+        -NofHtMigrationGateApproved `
+        -NofHtMigrationEvidence "test-evidence"
+    } catch {
+      $failedWithoutHabitBotSecret = $_.Exception.Message -like "*nof-ht-habit-bot-secrets*" -or $_.ToString() -like "*nof-ht-habit-bot-secrets*"
+    }
+
+    if (!$failedWithoutHabitBotSecret) {
+      throw "Expected nof-ht preflight to fail when nof-ht-habit-bot-secrets wiring is missing"
+    }
+  } finally {
+    [System.IO.File]::WriteAllText($deployment, $originalDeployment, $utf8NoBom)
+  }
+
   Write-Host "release-preflight nof-ht migration gate: ok"
 } finally {
   Remove-Item Env:\NOF_RELEASE_PREFLIGHT_ALLOW_DIRTY_FOR_TESTS -ErrorAction SilentlyContinue
