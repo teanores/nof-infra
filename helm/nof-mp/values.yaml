@@ -22,6 +22,7 @@ env:
   NEXT_PUBLIC_NOF_TT_ORIGIN: "https://task-tracker.forgath.ru"
   NOF_PLATFORM_OAUTH_ISSUER: "https://forgath.ru"
   NOF_MP_EMAIL_WEBHOOK_URL: "http://nof-mp:3000/api/internal/email/password-reset"
+  NOF_SERVICE_INTERNAL_URL: "http://nof-service-internal:5000"
 
 secretEnv:
   DB_USER:

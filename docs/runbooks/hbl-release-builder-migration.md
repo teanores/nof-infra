@@ -79,6 +79,13 @@ legacy service names:
 - `dragon-forge`
 - `dragon-forge-internal`
 
+Read-only hbl discovery on 2026-06-15 confirmed `dragon-forge-internal` uses:
+
+- port `5000`, targetPort `http`;
+- selector `app.kubernetes.io/instance=dragon-forge`;
+- selector `app.kubernetes.io/name=dragon-forge`;
+- a live endpoint on port `5000`.
+
 Until a canonical alias exists, nof-mp must keep the runtime fallback
 `http://dragon-forge-internal:5000`. This is migration debt, not an accepted
 new naming pattern.
@@ -92,6 +99,13 @@ Target:
   accepted release window;
 - remove the legacy Service only after login, registration, password recovery
   and platform profile UAT pass.
+
+Repository target state:
+
+- alias manifest:
+  `environments/hbl/legacy/nof-service-internal-service.target.yaml`;
+- nof-mp Helm env:
+  `NOF_SERVICE_INTERNAL_URL=http://nof-service-internal:5000`.
 
 Safe migration order:
 
