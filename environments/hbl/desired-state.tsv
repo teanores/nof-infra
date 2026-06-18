@@ -2,6 +2,6 @@
 # hbl release-builder desired state. Keep this file free of secrets.
 # Production rows should use release tags after local regression and owner approval.
 # hbl nof-release-builder-sync.timer may treat enabled rows as production-bound after push to the active control branch.
-nof-mp	v0.2.42	false
+nof-mp	v0.2.43	false
 nof-tt	v0.2.5	false
 nof-ht	v1.33.59	false
