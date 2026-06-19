@@ -31,7 +31,7 @@ Local `nof-infra` state after bootstrap:
 - default control manifest is `environments/hbl/desired-state.tsv`;
 - supported release-builder service keys are `nof-mp`, `nof-tt`, `nof-ht`;
 - current local desired-state rows on 2026-06-14:
-  - `nof-mp` -> `v0.2.35`, disabled;
+  - `nof-mp` -> `v0.2.47`, disabled;
   - `nof-tt` -> `v0.2.5`, disabled;
   - `nof-ht` -> `v1.33.59`, disabled because nof-ht still needs a dedicated release window for the naragothal product-bot readiness release.
 
@@ -52,7 +52,8 @@ Current read-only discovery on 2026-06-13:
 - Installed release-builder defaults point to `https://github.com/teanores/nof-infra.git`.
 - Installed release-builder defaults use `environments/hbl/desired-state.tsv`.
 - `/opt/nof-release-builder/nof-release-builder.sh list` returns `nof-mp`, `nof-tt`, `nof-ht`.
-- Journal evidence shows the timer fetched `nof-infra main` and applied `nof-mp v0.2.35` from desired-state after the same tag had already been deployed manually.
+- Journal evidence showed the timer fetched `nof-infra main` and applied `nof-mp v0.2.35` from desired-state after the same tag had already been deployed manually.
+- Current nof-mp release-builder state after 2026-06-19 cleanup: runtime image `localhost:32000/nof-mp:9c4412a`, release ref `v0.2.47`, Helm revision `78`, Helm history APP VERSION `0.2.47`, desired-state row `v0.2.47` with `enabled=false`.
 - Journal evidence also shows broad sync iterating over enabled `nof-tt v0.2.5` and `nof-ht v1.33.56`, skipping them only because commits were unchanged.
 
 Implication: hbl desired-state automation is already active enough to deploy a pushed enabled row. Manual release-builder deploy plus desired-state push can cause a duplicate rollout. Routine nof-mp/nof-tt releases should move to one mode per release window: either desired-state automation or manual release-builder, not both.

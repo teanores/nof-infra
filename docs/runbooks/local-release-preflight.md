@@ -16,13 +16,13 @@ From `nof-infra`:
 Prepare an owner-facing release-window report first:
 
 ```powershell
-just prepare-release nof-mp v0.2.35 desired-state
+just prepare-release nof-mp v0.2.47 desired-state
 ```
 
 If the repository contains known unrelated local changes and you only need a planning report, use the explicit dirty variant:
 
 ```powershell
-just prepare-release-dirty nof-mp v0.2.35 desired-state
+just prepare-release-dirty nof-mp v0.2.47 desired-state
 ```
 
 The preparer writes a report under `reports/` and does not contact hbl, VPS, Kubernetes, Helm, Caddy or Docker.

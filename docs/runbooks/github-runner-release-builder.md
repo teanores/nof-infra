@@ -62,7 +62,7 @@ Required settings:
 | Input | Meaning |
 | --- | --- |
 | `service` | `nof-mp`, `nof-tt`, or `nof-ht` |
-| `ref` | semver tag, for example `v0.2.35` |
+| `ref` | semver tag, for example `v0.2.47` |
 | `approval_id` | owner approval / tracker evidence id |
 | `execute_deploy` | `false` validates only; `true` runs production deploy after GitHub environment approval |
 | `nof_ht_migration_gate_approved` | must remain `false` except for an explicitly accepted nof-ht release-builder migration window |
@@ -73,7 +73,7 @@ Use `execute_deploy=false` to validate the request without touching hbl producti
 
 ```text
 service=nof-mp
-ref=v0.2.35
+ref=v0.2.47
 approval_id=IDEA-...
 execute_deploy=false
 nof_ht_migration_gate_approved=false

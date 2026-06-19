@@ -99,7 +99,7 @@ Local service repository tags currently verified:
 
 | Service | Current tag | Desired-state row | Notes |
 | --- | --- | --- | --- |
-| `nof-mp` | `v0.2.35` | `v0.2.35`, disabled | Routine deploys must use one explicitly approved release mode per window. |
+| `nof-mp` | `v0.2.47` | `v0.2.47`, disabled | Runtime and Helm history are aligned after the appVersion stamp fix; routine deploys must use one explicitly approved release mode per window. |
 | `nof-tt` | `v0.2.5` | `v0.2.5`, disabled | Task Tracker MCP endpoint remains `task-tracker.forgath.ru/api/mcp`; routine deploys remain release-window scoped. |
 | `nof-ht` | `v1.33.59` pending tag | `v1.33.59`, disabled | nof-ht has naragothal product-bot readiness changes after `v1.33.58`; release requires a fresh semver tag and owner-approved window. |
 
