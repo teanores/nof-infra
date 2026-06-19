@@ -308,6 +308,35 @@ app_version_from_ref() {
   esac
 }
 
+set_chart_app_version() {
+  local chart_path="$1"
+  local app_version="$2"
+  local chart_file="$chart_path/Chart.yaml"
+
+  if [[ ! -f "$chart_file" ]]; then
+    echo "ERROR: Helm Chart.yaml not found: $chart_file" >&2
+    exit 66
+  fi
+
+  local chart_tmp
+  chart_tmp="$(mktemp)"
+  if ! awk -v app_version="$app_version" '
+    BEGIN { count = 0 }
+    /^appVersion:[[:space:]]*/ {
+      print "appVersion: \"" app_version "\""
+      count++
+      next
+    }
+    { print }
+    END { if (count != 1) exit 3 }
+  ' "$chart_file" > "$chart_tmp"; then
+    rm -f "$chart_tmp"
+    echo "ERROR: expected exactly one appVersion field in $chart_file" >&2
+    exit 66
+  fi
+  mv "$chart_tmp" "$chart_file"
+}
+
 prepare_repo() {
   local url="$1"
   local ref="$2"
@@ -382,6 +411,7 @@ deploy_service() {
   fi
 
   require_migration_gate_ready "$service" "$MIGRATION_MODE"
+  set_chart_app_version "$chart_path" "$app_version"
 
   echo "==> Building $IMAGE_REPOSITORY:$image_tag"
   sudo docker build \

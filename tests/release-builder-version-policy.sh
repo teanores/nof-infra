@@ -29,4 +29,24 @@ if [[ "$output" != *"must use a semver tag ref"* ]]; then
   exit 1
 fi
 
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+mkdir -p "$tmp_dir/chart"
+cat > "$tmp_dir/chart/Chart.yaml" <<'EOF'
+apiVersion: v2
+name: nof-mp
+description: fixture
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
+EOF
+
+set_chart_app_version "$tmp_dir/chart" "0.2.47"
+
+if ! grep -qx 'appVersion: "0.2.47"' "$tmp_dir/chart/Chart.yaml"; then
+  echo "expected Chart.yaml appVersion to be rewritten for Helm history" >&2
+  cat "$tmp_dir/chart/Chart.yaml" >&2
+  exit 1
+fi
+
 echo "release-builder version policy: ok"
