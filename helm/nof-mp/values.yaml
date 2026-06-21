@@ -40,6 +40,10 @@ secretEnv:
   NOF_AUTH_SECRET_KEY:
     secretName: dragon-forge-secrets
     key: SECRET_KEY
+  SECRET_KEY_PREVIOUS:
+    secretName: dragon-forge-secrets
+    key: SECRET_KEY_PREVIOUS
+    optional: true
   BOT_API_KEY:
     secretName: bot-secrets
     key: bot-api-key

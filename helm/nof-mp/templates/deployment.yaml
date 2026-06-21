@@ -30,6 +30,9 @@ spec:
                 secretKeyRef:
                   name: {{ $value.secretName }}
                   key: {{ $value.key }}
+                  {{- if hasKey $value "optional" }}
+                  optional: {{ $value.optional }}
+                  {{- end }}
             {{- end }}
           ports:
             - name: http
