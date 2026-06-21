@@ -44,8 +44,13 @@
 	}
 }
 
+(nof_hsts) {
+	header Strict-Transport-Security "max-age=31536000"
+}
+
 forgath.ru, www.forgath.ru {
 	import forgath_access_log
+	import nof_hsts
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:18080 {
 		header_up Host {host}
@@ -57,6 +62,7 @@ forgath.ru, www.forgath.ru {
 
 task-tracker.forgath.ru {
 	import forgath_access_log
+	import nof_hsts
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:18080 {
 		header_up Host {host}
@@ -68,6 +74,7 @@ task-tracker.forgath.ru {
 
 habit-tracker.forgath.ru {
 	import forgath_access_log
+	import nof_hsts
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:18080 {
 		header_up Host {host}
