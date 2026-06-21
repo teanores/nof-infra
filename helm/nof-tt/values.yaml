@@ -38,6 +38,9 @@ secretEnv:
   SECRET_KEY:
     secretName: dragon-forge-secrets
     key: SECRET_KEY
+  NOF_TT_MCP_TOKEN_SECRET:
+    secretName: nof-tt-mcp-secrets
+    key: NOF_TT_MCP_TOKEN_SECRET
   BOT_API_KEY:
     secretName: bot-secrets
     key: bot-api-key
