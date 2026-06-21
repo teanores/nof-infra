@@ -63,7 +63,6 @@ data:
       }
 
       location ~ ^/(admin|login|register|profile|me|logout|overview)(/.*)?$ {
-        add_header Clear-Site-Data '"cache"' always;
         proxy_pass http://nof_platform_upstream;
       }
 
