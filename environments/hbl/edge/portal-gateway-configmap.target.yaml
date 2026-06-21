@@ -31,7 +31,7 @@ data:
     }
 
     upstream dragon_forge_upstream {
-      server dragon-forge-internal:5000;
+      server nof-service-internal:5000;
     }
 
     server {

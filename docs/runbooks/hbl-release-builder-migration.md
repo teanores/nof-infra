@@ -71,8 +71,8 @@ Implication: hbl desired-state automation is already active enough to deploy a p
 
 ### nof-service Internal Service Alias
 
-The current nof-mp login and public registration bridge still calls the legacy
-service through `NOF_SERVICE_INTERNAL_URL`.
+The nof-mp login and public registration bridge calls the legacy service
+through `NOF_SERVICE_INTERNAL_URL`.
 
 Read-only hbl discovery on 2026-06-14 showed that Kubernetes still exposes the
 legacy service names:
@@ -87,15 +87,28 @@ Read-only hbl discovery on 2026-06-15 confirmed `dragon-forge-internal` uses:
 - selector `app.kubernetes.io/name=dragon-forge`;
 - a live endpoint on port `5000`.
 
-Until a canonical alias exists, nof-mp must keep the runtime fallback
-`http://dragon-forge-internal:5000`. This is migration debt, not an accepted
-new naming pattern.
+Repository state on 2026-06-21 now uses the canonical alias in local desired
+manifests:
+
+- nof-mp default runtime fallback:
+  `http://nof-service-internal:5000`;
+- nof-mp Helm env:
+  `NOF_SERVICE_INTERNAL_URL=http://nof-service-internal:5000`;
+- portal-gateway legacy upstream:
+  `nof-service-internal:5000`;
+- alias manifest:
+  `environments/hbl/legacy/nof-service-internal-service.target.yaml`.
+
+The alias still targets the legacy `dragon-forge` workload selector. This is a
+compatibility alias for the legacy nof-service boundary, not a new service
+implementation.
 
 Target:
 
 - keep repository and product boundary name: `nof-service`;
-- add or rename a Kubernetes Service alias named `nof-service-internal`;
-- switch nof-mp `NOF_SERVICE_INTERNAL_URL` to `http://nof-service-internal:5000`;
+- keep a Kubernetes Service alias named `nof-service-internal`;
+- keep nof-mp `NOF_SERVICE_INTERNAL_URL` on `http://nof-service-internal:5000`;
+- keep portal-gateway legacy routes on `nof-service-internal:5000`;
 - keep `dragon-forge-internal` only as rollback compatibility during one
   accepted release window;
 - remove the legacy Service only after login, registration, password recovery
@@ -111,15 +124,14 @@ Repository target state:
 Safe migration order:
 
 1. Inventory current Service selector, endpoints and consumers by metadata only.
-2. Add a `nof-service-internal` Service alias with the same selector/ports.
+2. Apply or verify the `nof-service-internal` Service alias with the same selector/ports.
 3. Verify from inside the cluster that both service DNS names reach the same
    legacy bridge without printing secrets or user data.
-4. Update the nof-mp Helm value `NOF_SERVICE_INTERNAL_URL` to
-   `http://nof-service-internal:5000`.
-5. Deploy nof-mp through an approved one-service release window.
-6. UAT login, registration request/confirm, password reset, profile and service
+4. Deploy nof-mp and portal-gateway target changes through approved release
+   windows.
+5. UAT login, registration request/confirm, password reset, profile and service
    OAuth launches.
-7. Remove `dragon-forge-internal` only after rollback no longer needs it.
+6. Remove `dragon-forge-internal` only after rollback no longer needs it.
 
 Stop conditions:
 
