@@ -1,48 +1,186 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: portal-gateway-config
+  name: portal-gateway
   namespace: nof-apps
 data:
   default.conf: |
+    map $http_x_forwarded_proto $nof_forwarded_proto {
+      default $http_x_forwarded_proto;
+      "" $scheme;
+    }
+
+    map $http_cookie $nof_landing_actions {
+      default '<a class="button" href="/login?next=%2Foverview">&#1042;&#1086;&#1081;&#1090;&#1080; &#1074; &#1087;&#1086;&#1088;&#1090;&#1072;&#1083;</a>';
+      ~*(auth_token|nof_tt_session)= '<a class="button button-secondary" href="/profile">&#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</a><a class="button" href="/overview">&#1048;&#1079;&#1091;&#1095;&#1080;&#1090;&#1100; &#1087;&#1083;&#1072;&#1090;&#1092;&#1086;&#1088;&#1084;&#1091;</a>';
+    }
+
+    limit_req_zone $binary_remote_addr zone=nof_login:10m rate=5r/m;
+    limit_req_status 429;
+
+    upstream forge_tasks_upstream {
+      server nof-tt:3000;
+    }
+
+    upstream nof_platform_upstream {
+      server nof-mp:3000;
+    }
+
+    upstream nof_ht_upstream {
+      server nof-ht:3000;
+    }
+
+    upstream dragon_forge_upstream {
+      server dragon-forge-internal:5000;
+    }
+
     server {
-      listen 80;
-      server_name forgath.ru;
+      listen 80 default_server;
+      server_name forgath.ru www.forgath.ru _;
+      absolute_redirect off;
+
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $nof_forwarded_proto;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
+
+      location = /gateway-health {
+        add_header Content-Type text/plain;
+        return 200 "portal-gateway ok\n";
+      }
+
+      location = / {
+        default_type "text/html; charset=utf-8";
+        return 200 '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Narag&#39;Othal Forgath</title><style>:root{color-scheme:dark;--bg:#0a0a0f;--text:#e0e0e0;--muted:#b7c1c8;--accent:#00b4d8;--rust:#c44c2e;--rust-dark:#9f3a22;--line:rgba(224,224,224,.18)}*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,sans-serif;background:#0a0a0f;color:var(--text);background-image:linear-gradient(90deg,rgba(0,180,216,.08) 1px,transparent 1px),linear-gradient(rgba(0,180,216,.06) 1px,transparent 1px);background-size:56px 56px}main{min-height:100vh;display:grid;align-items:center;padding:40px 20px}.shell{width:min(920px,100%);margin:0 auto;display:grid;gap:28px;border-left:2px solid var(--accent);padding-left:26px}.mark{color:var(--accent);font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:13px}h1{margin:0;font-size:clamp(38px,7vw,72px);line-height:.95;letter-spacing:0;max-width:760px;text-transform:uppercase}p{margin:0;max-width:680px;color:var(--muted);font-size:19px;line-height:1.65}.actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-top:8px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:2px;background:var(--rust);color:#fff7ed;font-weight:700;text-decoration:none;border:1px solid var(--rust);text-transform:uppercase;letter-spacing:.08em}.button:hover{background:var(--rust-dark);border-color:var(--rust-dark)}.button-secondary{background:transparent;color:var(--text);border-color:var(--line)}.button-secondary:hover{background:rgba(0,180,216,.08);border-color:var(--accent);color:var(--accent)}.note{border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:#8fa3ad;letter-spacing:.14em;text-transform:uppercase}</style></head><body><main><section class="shell" aria-label="Narag&#39;Othal Forgath"><div class="mark">Te&#39;An&#39;ore</div><h1>Narag&#39;Othal Forgath</h1><p>&#1055;&#1086;&#1088;&#1090;&#1072;&#1083; &#1101;&#1082;&#1089;&#1087;&#1077;&#1088;&#1080;&#1084;&#1077;&#1085;&#1090;&#1086;&#1074; Te&#39;An&#39;ore. &#1058;&#1088;&#1077;&#1082;&#1077;&#1088; &#1087;&#1088;&#1080;&#1074;&#1099;&#1095;&#1077;&#1082;, &#1058;&#1088;&#1077;&#1082;&#1077;&#1088; &#1079;&#1072;&#1076;&#1072;&#1095;, &#1055;&#1086;&#1088;&#1090;&#1072;&#1083; &#1089;&#1090;&#1088;&#1080;&#1084;&#1077;&#1088;&#1072;.</p><div class="actions">$nof_landing_actions</div><div class="note">31.05.2026 // Te&#39;An&#39;ore</div></section></main></body></html>';
+      }
+
+      location ~ ^/(admin|login|register|profile|me|logout|overview)(/.*)?$ {
+        add_header Clear-Site-Data '"cache"' always;
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location ~ ^/_next(/.*)?$ {
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location ~ ^/(products)(/.*)?$ {
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location = /api/login {
+        limit_req zone=nof_login burst=5 nodelay;
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location ~ ^/(api/logout|api/me|api/profile)(/.*)?$ {
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location = /api/admin/security/edge-events {
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location = /api/auth/platform/redeem {
+        proxy_pass http://forge_tasks_upstream;
+      }
+
+      location ~ ^/(api/auth|api/platform|api/portal|api/public|api/mcp-tokens)(/.*)?$ {
+        proxy_pass http://nof_platform_upstream;
+      }
+
+      location ~ ^/auth/platform/callback(/.*)?$ {
+        proxy_pass http://forge_tasks_upstream;
+      }
+
+      location ~ ^/(projects|epics|tasks|sprints|ideas|references|bots|legacy)(/.*)?$ {
+        proxy_pass http://forge_tasks_upstream;
+      }
+
+      location ~ ^/(api/tasks|api/epics|api/projects|api/sprints|api/ideas|api/mcp|api/openapi)(/.*)?$ {
+        proxy_pass http://forge_tasks_upstream;
+      }
+
+      location ~ ^/(health|health/ready|api/v1/status|levels|ranks|experience_rewards|users|roles|settings|jobs|loyalty|logout|explore)(/.*)?$ {
+        proxy_pass http://dragon_forge_upstream;
+      }
+
+      location ~ ^/(bot|api/bot|bots|public|user)(/.*)?$ {
+        proxy_pass http://dragon_forge_upstream;
+      }
+
+      location ~ ^/(static|media)(/.*)?$ {
+        proxy_pass http://dragon_forge_upstream;
+      }
 
       location / {
-        proxy_pass http://nof-mp:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://nof_platform_upstream;
       }
     }
 
     server {
       listen 80;
       server_name task-tracker.forgath.ru;
+      absolute_redirect off;
+
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $nof_forwarded_proto;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
+
+      location = /gateway-health {
+        add_header Content-Type text/plain;
+        return 200 "portal-gateway ok\n";
+      }
+
+      location = / {
+        return 307 /projects;
+      }
 
       location / {
-        proxy_pass http://nof-tt:3000;
-        proxy_hide_header Content-Security-Policy;
-        proxy_hide_header Content-Security-Policy-Report-Only;
-        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://forge_tasks_upstream;
       }
     }
 
     server {
       listen 80;
       server_name habit-tracker.forgath.ru;
+      absolute_redirect off;
+
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $nof_forwarded_proto;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
+
+      location = /gateway-health {
+        add_header Content-Type text/plain;
+        return 200 "portal-gateway ok\n";
+      }
 
       location / {
-        proxy_pass http://nof-ht:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://nof_ht_upstream;
       }
     }

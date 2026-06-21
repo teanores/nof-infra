@@ -72,6 +72,11 @@ task-tracker.forgath.ru {
 	}
 }
 
+http://forge-tasks.forgath.ru {
+	import forgath_access_log
+	respond "Legacy Task Tracker hostname is disabled. Use https://task-tracker.forgath.ru/" 410
+}
+
 habit-tracker.forgath.ru {
 	import forgath_access_log
 	import nof_hsts

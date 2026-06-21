@@ -24,3 +24,22 @@ foreach ($hostname in $canonicalHosts) {
     throw "$hostname must import the nof_hsts snippet."
   }
 }
+
+$legacyBlockMatch = [regex]::Match($caddyfile, '(?s)http://forge-tasks\.forgath\.ru\s*\{(?<block>.*?)^\}', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+if (-not $legacyBlockMatch.Success) {
+  throw "Legacy forge-tasks.forgath.ru must be explicitly disabled with an HTTP-only 410 response."
+}
+
+$legacyBlock = $legacyBlockMatch.Groups["block"].Value
+
+if ($legacyBlock -notmatch 'respond "Legacy Task Tracker hostname is disabled\. Use https://task-tracker\.forgath\.ru/" 410') {
+  throw "Legacy forge-tasks.forgath.ru must be explicitly disabled with an HTTP-only 410 response."
+}
+
+if ($caddyfile -match '(?m)^forge-tasks\.forgath\.ru\s*\{') {
+  throw "Legacy forge-tasks.forgath.ru must not be configured as an HTTPS site."
+}
+
+if ($legacyBlock -match 'reverse_proxy') {
+  throw "Legacy forge-tasks.forgath.ru must not proxy to any upstream."
+}

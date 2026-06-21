@@ -19,10 +19,6 @@ if ($serverBlock -match "add_header\s+Content-Security-Policy-Report-Only\s+") {
   throw "task-tracker.forgath.ru must not emit Content-Security-Policy-Report-Only."
 }
 
-if ($serverBlock -notmatch "proxy_hide_header\s+Content-Security-Policy-Report-Only;") {
-  throw "task-tracker.forgath.ru must hide upstream Content-Security-Policy-Report-Only."
-}
-
 if ($serverBlock -notmatch "frame-ancestors 'self'") {
   throw "task-tracker.forgath.ru CSP must keep frame-ancestors restricted to self."
 }

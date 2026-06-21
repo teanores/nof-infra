@@ -97,15 +97,21 @@ if (!(Test-Path $edgeRoot)) {
   Fail "Edge target directory not found: $edgeRoot"
 }
 
-$edgeText = Get-ChildItem -Path $edgeRoot -Recurse -File | ForEach-Object { Get-Content $_.FullName }
+$edgeText = (Get-ChildItem -Path $edgeRoot -Recurse -File | ForEach-Object { Get-Content $_.FullName }) -join "`n"
 $forbiddenLiveNames = @(
-  "forge-tasks.forgath.ru",
   "proxy_pass http://forge-tasks",
   "server_name forge-tasks.forgath.ru"
 )
 foreach ($name in $forbiddenLiveNames) {
   if ($edgeText -match [regex]::Escape($name)) {
     Fail "Forbidden legacy live edge target found: $name"
+  }
+}
+if ($edgeText -match "forge-tasks\.forgath\.ru") {
+  $allowedDisabledLegacyHost = 'http://forge-tasks.forgath.ru'
+  $allowedDisabledLegacyResponse = 'respond "Legacy Task Tracker hostname is disabled. Use https://task-tracker.forgath.ru/" 410'
+  if (($edgeText -notmatch [regex]::Escape($allowedDisabledLegacyHost)) -or ($edgeText -notmatch [regex]::Escape($allowedDisabledLegacyResponse))) {
+    Fail "Legacy forge-tasks.forgath.ru may only appear as an explicit HTTP-only 410 disabled host."
   }
 }
 
