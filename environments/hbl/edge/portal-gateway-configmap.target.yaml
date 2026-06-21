@@ -24,6 +24,9 @@ data:
 
       location / {
         proxy_pass http://nof-tt:3000;
+        proxy_hide_header Content-Security-Policy;
+        proxy_hide_header Content-Security-Policy-Report-Only;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

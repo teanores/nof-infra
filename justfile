@@ -9,6 +9,7 @@ status:
 
 test:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
+  .\tests\portal-gateway-security-headers.ps1
   .\tests\github-runner-workflow-policy.ps1
   .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
   .\scripts\check-hbl-nof-ht-bot-prereqs.ps1 -PrintCommandsOnly
@@ -42,6 +43,7 @@ test-bash-wsl:
 
 test-all:
   .\tests\release-preflight-nof-ht-migration-gate.ps1
+  .\tests\portal-gateway-security-headers.ps1
   .\tests\github-runner-workflow-policy.ps1
   .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
   .\scripts\check-hbl-nof-ht-bot-prereqs.ps1 -PrintCommandsOnly
