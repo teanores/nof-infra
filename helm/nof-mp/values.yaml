@@ -44,9 +44,6 @@ secretEnv:
     secretName: dragon-forge-secrets
     key: SECRET_KEY_PREVIOUS
     optional: true
-  BOT_API_KEY:
-    secretName: bot-secrets
-    key: bot-api-key
   NOF_PLATFORM_OAUTH_JWT_SECRET:
     secretName: nof-mp-oauth-secrets
     key: NOF_PLATFORM_OAUTH_JWT_SECRET
