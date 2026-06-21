@@ -10,16 +10,8 @@ source "$repo_root/release-builder/nof-release-builder.sh"
 
 unset NOF_RELEASE_SYNC_APPROVED_SERVICES
 unset NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES
-if ! sync_service_is_approved nof-mp; then
-  echo "expected unset allowlist to allow existing broad-sync behavior" >&2
-  exit 1
-fi
-
-NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1
-export NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES
-
 if sync_service_is_approved nof-mp; then
-  echo "expected required allowlist mode to block unset allowlist" >&2
+  echo "expected unset allowlist to block broad-sync by default" >&2
   exit 1
 fi
 
@@ -27,7 +19,15 @@ NOF_RELEASE_SYNC_APPROVED_SERVICES=""
 export NOF_RELEASE_SYNC_APPROVED_SERVICES
 
 if sync_service_is_approved nof-mp; then
-  echo "expected required allowlist mode to block empty allowlist" >&2
+  echo "expected empty allowlist to block broad-sync by default" >&2
+  exit 1
+fi
+
+NOF_RELEASE_SYNC_APPROVED_SERVICES="none"
+export NOF_RELEASE_SYNC_APPROVED_SERVICES
+
+if sync_service_is_approved nof-mp; then
+  echo "expected placeholder allowlist to block unlisted service" >&2
   exit 1
 fi
 

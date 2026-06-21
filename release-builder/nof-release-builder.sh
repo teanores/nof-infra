@@ -33,6 +33,11 @@ Do not print secrets in logs, tickets or chat.
 
 Manifest format for sync mode:
   service<TAB>git-ref<TAB>enabled
+
+Sync mode requires an explicit service allowlist:
+  NOF_RELEASE_SYNC_APPROVED_SERVICES=nof-mp,nof-tt
+
+Unset or empty NOF_RELEASE_SYNC_APPROVED_SERVICES blocks all enabled manifest rows.
 USAGE
 }
 
@@ -154,10 +159,7 @@ sync_service_is_approved() {
   local approved
 
   if [[ -z "$allowlist" ]]; then
-    if [[ "${NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES:-}" =~ ^(1|true|yes)$ ]]; then
-      return 1
-    fi
-    return 0
+    return 1
   fi
 
   IFS=',' read -r -a approved <<< "$allowlist"

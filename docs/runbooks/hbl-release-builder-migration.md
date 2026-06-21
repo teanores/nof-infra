@@ -261,22 +261,28 @@ Expected:
 - no secret values are printed in systemd status or journal output;
 - broad sync cannot apply unapproved enabled service rows during a one-service release window.
 
-The local release-builder now supports `NOF_RELEASE_SYNC_APPROVED_SERVICES` for sync mode. When this comma-separated allowlist is set, enabled manifest rows outside the list are skipped:
+The local release-builder requires `NOF_RELEASE_SYNC_APPROVED_SERVICES` for sync mode. When this comma-separated allowlist is set, enabled manifest rows outside the list are skipped:
 
 ```bash
 NOF_RELEASE_SYNC_APPROVED_SERVICES=nof-mp /opt/nof-release-builder/nof-release-builder.sh sync main
 ```
 
-For timer-driven automation, use fail-closed mode:
+Unset or empty `NOF_RELEASE_SYNC_APPROVED_SERVICES` blocks all enabled manifest rows by default. This is the safe default for the hbl timer and prevents broad sync if a timer/service environment loses its allowlist.
+
+For timer-driven automation that should idle safely, use a non-matching placeholder:
 
 ```bash
-NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1
 NOF_RELEASE_SYNC_APPROVED_SERVICES=none
 ```
 
-With `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1`, an empty or unset allowlist blocks all enabled manifest rows. This is the safe default for the hbl timer. During an approved release window, set `NOF_RELEASE_SYNC_APPROVED_SERVICES` to the exact service keys approved for that window, for example `nof-mp` or `nof-mp,nof-tt`.
+During an approved release window, set `NOF_RELEASE_SYNC_APPROVED_SERVICES` to the exact service keys approved for that window, for example `nof-mp` or `nof-mp,nof-tt`.
 
-This guard is effective on hbl only after the updated script is installed and the systemd unit/timer is configured to pass the intended allowlist policy.
+This guard is effective on hbl only after the updated script is installed and the systemd unit/timer is configured to pass the intended allowlist policy. Do not rely on local repository behavior as proof of the installed hbl script; revalidate read-only before any desired-state release window.
+
+2026-06-21 local gate status:
+
+- local script gate: fail-closed by default; unset or empty allowlist skips all enabled rows;
+- live hbl timer/script: not changed by this local task; installing or reconfiguring it requires explicit owner approval in the current conversation.
 
 2026-06-13 status against these expectations:
 
@@ -285,13 +291,13 @@ This guard is effective on hbl only after the updated script is installed and th
 - control repo: yes, `nof-infra`;
 - manifest path: yes, `environments/hbl/desired-state.tsv`;
 - evidence/logs: yes, journal shows deploy/skip decisions and release-builder writes evidence;
-- broad sync isolation: implemented through `NOF_RELEASE_SYNC_APPROVED_SERVICES`;
-- fail-closed timer mode: installed on hbl through `NOF_RELEASE_SYNC_REQUIRE_APPROVED_SERVICES=1` and `NOF_RELEASE_SYNC_APPROVED_SERVICES=none`;
+- broad sync isolation: policy was implemented through `NOF_RELEASE_SYNC_APPROVED_SERVICES`;
+- fail-closed timer mode: earlier evidence said hbl was configured with `NOF_RELEASE_SYNC_APPROVED_SERVICES=none`; revalidate the installed script and unit before relying on timer behavior;
 - repository desired-state policy: clean locally; routine desired-state automation still requires a one-service owner-approved release window before enabling any row.
 
 If any expectation is not met, keep using explicitly approved `manual release-builder` mode for production hotfixes and treat automation as blocked.
 
-Because hbl sync is fail-closed, a pushed desired-state row should not deploy without an explicit allowlist, but agents still must not push desired-state changes casually. Desired-state is production-bound release control and must remain one-service scoped for routine release windows.
+After the fail-closed script is installed and revalidated on hbl, a pushed desired-state row should not deploy without an explicit allowlist, but agents still must not push desired-state changes casually. Desired-state is production-bound release control and must remain one-service scoped for routine release windows.
 
 Before switching routine releases to desired-state automation, correct repository desired-state policy drift and use a release-window wrapper so `NOF_RELEASE_SYNC_APPROVED_SERVICES` contains only the owner-approved service keys.
 
