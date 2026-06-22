@@ -159,6 +159,108 @@ Do not run without owner approval in the current conversation.
    sudo systemctl enable --now nof-edge-audit-shipper.timer
    ```
 
+## Token Rotation Path
+
+Use this path for `NOF-INFRA-17` / `NOF-MP-13` edge audit ingest token rotation.
+
+The standard path is:
+
+1. Prepare a new token out of band. Do not paste it into chat, tracker, Wiki, logs or git.
+2. Confirm the owner approved the exact rotation window in the current chat.
+3. Apply the updated Kubernetes Secret through the approved release-builder / GitHub runner release window, or use the NOF-INFRA-16 emergency manual flow only if explicitly approved.
+4. Deploy or restart nof-mp through the same approved release window so the pod reads the updated `nof-mp-security-audit` value.
+5. Run metadata-only verification.
+6. Run owner UAT on the admin security dashboard.
+
+Required approval packet before any live rotation:
+
+- target secret name: `nof-mp-security-audit`;
+- target key: `edge-ingest-token`;
+- service affected: `nof-mp`;
+- deployment path: `github-runner release-builder` unless emergency/manual mode is explicitly approved;
+- evidence id: tracker task or current-chat approval reference;
+- rollback condition and UAT steps.
+
+Manual/emergency SSH flow remains available only under the release-builder guardrails in `docs/runbooks/github-runner-release-builder.md`:
+
+```bash
+NOF_RELEASE_MANUAL_OVERRIDE=1
+NOF_RELEASE_APPROVAL_ID='<current-chat-owner-approval-or-tracker-evidence-id>'
+```
+
+Do not use manual flow as the routine product-agent path.
+
+### Metadata-Only Preflight
+
+Local dry run, safe by default:
+
+```powershell
+just check-edge-audit-token-dry-run
+```
+
+This prints the hbl read-only commands but does not run SSH.
+
+Live read-only preflight, only after the owner approves reading hbl metadata:
+
+```powershell
+just check-edge-audit-token
+```
+
+The commands must only print:
+
+- `edge-ingest-token length=<number>`;
+- `NOF_SECURITY_AUDIT_INGEST_TOKEN=SET` or `MISSING`.
+
+They must not decode or print the token value.
+
+### Post-Rotation Verification
+
+After the approved deploy/restart:
+
+```powershell
+just check-edge-audit-token-live
+```
+
+Expected:
+
+- secret `nof-mp-security-audit` exists;
+- key `edge-ingest-token` exists and has a non-zero encoded length;
+- nof-mp pod reports `NOF_SECURITY_AUDIT_INGEST_TOKEN=SET`;
+- no token value appears in command output.
+
+Owner UAT:
+
+1. Open `https://forgath.ru/admin/security`.
+2. Generate safe public traffic:
+
+   ```bash
+   curl -i https://forgath.ru/.well-known/nof-edge-audit-smoke
+   ```
+
+3. Confirm edge request / not-found activity appears in the security dashboard.
+
+Expected:
+
+- edge events are visible;
+- no raw token, cookie, authorization header or internal address is visible.
+
+### Rotation Rollback
+
+If nof-mp fails to ingest events or the pod does not expose the env:
+
+1. Stop the collector timer if it is running:
+
+   ```bash
+   sudo systemctl disable --now nof-edge-audit-shipper.timer
+   ```
+
+2. Restore the previous approved `nof-mp-security-audit` key value out of band without printing it.
+3. Roll back or restart nof-mp through the approved release-builder path.
+4. Re-run metadata-only verification.
+5. Keep both the failed rotation evidence and rollback evidence in tracker without secret values.
+
+Stop immediately if any command would print the token value, the dashboard shows raw token-like data, or the approved service/ref differs from the actual target.
+
 ## Verification
 
 1. Unauthorized endpoint remains hidden:
