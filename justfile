@@ -16,6 +16,7 @@ test:
   .\scripts\check-hbl-nof-ht-bot-prereqs.ps1 -PrintCommandsOnly
   .\scripts\check-hbl-edge-audit-token-prereqs.ps1 -PrintCommandsOnly
   .\scripts\check-hbl-postgres-secret-split-prereqs.ps1 -PrintCommandsOnly
+  .\scripts\check-hbl-platform-oauth-secrets.ps1 -PrintCommandsOnly
 
 check-policy environment="hbl":
   .\scripts\check-desired-state-policy.ps1 -Environment {{environment}}
@@ -53,6 +54,15 @@ check-postgres-secret-split:
 check-postgres-secret-split-live:
   .\scripts\check-hbl-postgres-secret-split-prereqs.ps1 -ExpectLiveConfig
 
+check-platform-oauth-secrets-dry-run:
+  .\scripts\check-hbl-platform-oauth-secrets.ps1 -PrintCommandsOnly
+
+check-platform-oauth-secrets:
+  .\scripts\check-hbl-platform-oauth-secrets.ps1
+
+check-platform-oauth-secrets-live:
+  .\scripts\check-hbl-platform-oauth-secrets.ps1 -ExpectLiveConfig
+
 test-bash-git:
   & 'C:\Program Files\Git\bin\bash.exe' -n scripts/hbl-install-nof-infra-github-runner.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
@@ -72,6 +82,7 @@ test-all:
   .\scripts\check-hbl-nof-ht-bot-prereqs.ps1 -PrintCommandsOnly
   .\scripts\check-hbl-edge-audit-token-prereqs.ps1 -PrintCommandsOnly
   .\scripts\check-hbl-postgres-secret-split-prereqs.ps1 -PrintCommandsOnly
+  .\scripts\check-hbl-platform-oauth-secrets.ps1 -PrintCommandsOnly
   & 'C:\Program Files\Git\bin\bash.exe' -n scripts/hbl-install-nof-infra-github-runner.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
