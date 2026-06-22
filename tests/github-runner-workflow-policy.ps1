@@ -20,7 +20,8 @@ $required = @(
   "approval_id is required",
   "nof-ht deploy through nof-infra runner is blocked until migration gate approval is explicit.",
   "permissions:",
-  "contents: read"
+  "contents: read",
+  'group: nof-release-builder-hbl-${{ inputs.service }}'
 )
 
 foreach ($needle in $required) {
@@ -39,6 +40,10 @@ if ($text -match "(?m)^\s+pull_request:") {
 
 if ($text -match "runs-on:\s*\[self-hosted,\s*linux,\s*nof-ht\]") {
   throw "Workflow must not use product-specific nof-ht runner label."
+}
+
+if ($text -match "(?m)^\s*group:\s*nof-release-builder-hbl\s*$") {
+  throw "Workflow concurrency group must be scoped per service, not globally per hbl."
 }
 
 Write-Host "github runner workflow policy: ok"

@@ -57,6 +57,18 @@ Required settings:
 - only trusted branches/tags/workflows may target the environment;
 - no secret values should be printed to logs.
 
+## Concurrency Policy
+
+The GitHub Actions workflow must use a per-service concurrency group:
+
+```text
+nof-release-builder-hbl-${{ inputs.service }}
+```
+
+This keeps unrelated service release requests from blocking each other at the GitHub Actions queue level.
+
+The hbl release-builder script can still keep its local global `mkdir` lock. That host-level lock is a separate safety guard for constrained hbl execution and must not be removed as part of the Actions concurrency policy.
+
 ## Workflow Inputs
 
 | Input | Meaning |
@@ -139,6 +151,7 @@ Expected:
 - workflow is manual-only;
 - deploy job targets `[self-hosted, linux, nof-infra]`;
 - `hbl-production` environment gate is present;
+- workflow concurrency is scoped per service as `nof-release-builder-hbl-${{ inputs.service }}`;
 - deploy delegates to release-builder;
 - runbook warns not to paste the registration token into chat, Wiki, tracker or git.
 

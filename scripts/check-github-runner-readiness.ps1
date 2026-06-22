@@ -29,10 +29,12 @@ Require-FileContains $workflow "runs-on: [self-hosted, linux, nof-infra]"
 Require-FileContains $workflow "environment: hbl-production"
 Require-FileContains $workflow "/opt/nof-release-builder/nof-release-builder.sh deploy"
 Require-FileContains $workflow "nof_ht_migration_gate_approved:"
+Require-FileContains $workflow 'group: nof-release-builder-hbl-${{ inputs.service }}'
 Require-FileContains $runbook "hbl-production"
 Require-FileContains $runbook "Do not paste that token into chat, Wiki, tracker or git."
 Require-FileContains $runbook "Do not reconfigure the existing product-specific nof-ht runner."
 Require-FileContains $runbook "actions.runner.teanores-nof-infra.hbl-runner.service"
+Require-FileContains $runbook 'nof-release-builder-hbl-${{ inputs.service }}'
 
 if ($DocumentationOnly) {
   Write-Host "github runner readiness: documentation/workflow gates ok"
