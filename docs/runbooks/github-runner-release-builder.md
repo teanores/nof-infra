@@ -1,6 +1,6 @@
 # GitHub Runner Release-Builder Runbook
 
-Status: draft implementation runbook.
+Status: live and verified. The `teanores/nof-infra` runner was registered and a real no-op production deploy succeeded on 2026-06-21 (nof-tt redeployed to its current tag v0.2.29, Helm revision 33). This is now the only correct deploy path — no SSH to hbl required.
 Owner: nof-infra.
 
 ## Purpose
@@ -84,6 +84,47 @@ Expected:
 - validate job passes;
 - deploy job is skipped;
 - no hbl command runs.
+
+## Quick Trigger For Product Agents (gh CLI)
+
+This is the only supported way to deploy `nof-mp`, `nof-tt` or `nof-ht` to hbl. Direct SSH to hbl for deploys is not supported going forward (see NOF-INFRA-16).
+
+Prerequisites:
+
+- `gh` CLI authenticated against `teanores/nof-infra` with `workflow` scope (already true for this workspace).
+- An approval/evidence id from the owning project's tracker task (e.g. `NOF-TT-188` or a chat approval line).
+- A semver tag that already exists for the service (e.g. `v0.2.29`).
+
+Dry run (always do this first):
+
+```bash
+gh workflow run release-builder.yml -R teanores/nof-infra \
+  -f service=nof-tt \
+  -f ref=v0.2.29 \
+  -f approval_id=NOF-TT-188 \
+  -f execute_deploy=false
+```
+
+Watch it:
+
+```bash
+gh run list -R teanores/nof-infra --workflow=release-builder.yml --limit 5
+gh run watch -R teanores/nof-infra <run-id>
+```
+
+Real deploy, after the dry run passes and the owner has approved in chat:
+
+```bash
+gh workflow run release-builder.yml -R teanores/nof-infra \
+  -f service=nof-tt \
+  -f ref=v0.2.29 \
+  -f approval_id=NOF-TT-188 \
+  -f execute_deploy=true
+```
+
+For `nof-ht`, also pass `-f nof_ht_migration_gate_approved=true` once that gate is explicitly accepted; otherwise the validate step fails closed.
+
+Evidence after a real deploy is written under `~/nof-release-builder/evidence/<service>-<sha>-<timestamp>.txt` on hbl. Read it back via the workflow's "Show latest evidence files" step output (`gh run view -R teanores/nof-infra <run-id> --log`) — do not SSH to hbl to fetch it.
 
 ## Local Readiness Checks
 
