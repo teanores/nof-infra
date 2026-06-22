@@ -128,6 +128,7 @@ jobs:
           SERVICE: ${{ needs.validate.outputs.service }}
           REF: ${{ needs.validate.outputs.ref }}
           APPROVAL_ID: ${{ inputs.approval_id }}
+          NOF_RELEASE_APPROVAL_ID: ${{ inputs.approval_id }}
         run: |
           set -euo pipefail
 

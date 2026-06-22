@@ -38,6 +38,7 @@ test-bash-git:
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
+  & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-manual-guardrails.sh
 
 test-bash-wsl:
   wsl bash -lc "cd /mnt/c/Users/User/Documents/dev/NOF/nof-infra && bash -n scripts/hbl-install-nof-infra-github-runner.sh && bash tests/release-builder-version-policy.sh && bash tests/release-builder-migration-gate.sh"
@@ -53,6 +54,7 @@ test-all:
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-sync-allowlist.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-version-policy.sh
   & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-migration-gate.sh
+  & 'C:\Program Files\Git\bin\bash.exe' tests/release-builder-manual-guardrails.sh
 
 preflight service ref environment="hbl":
   .\scripts\release-preflight.ps1 -Service {{service}} -ExpectedRef {{ref}} -Environment {{environment}}

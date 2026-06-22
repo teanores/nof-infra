@@ -99,7 +99,7 @@ Expected:
 
 ## Quick Trigger For Product Agents (gh CLI)
 
-This is the only supported way to deploy `nof-mp`, `nof-tt` or `nof-ht` to hbl. Direct SSH to hbl for deploys is not supported going forward (see NOF-INFRA-16).
+This is the standard daily product-agent path for deploying `nof-mp`, `nof-tt` or `nof-ht` to hbl. Direct SSH/manual release-builder deploys remain available as an explicitly approved emergency/manual flow (see NOF-INFRA-16 and "Emergency Manual Flow" below).
 
 Prerequisites:
 
@@ -137,6 +137,41 @@ gh workflow run release-builder.yml -R teanores/nof-infra \
 For `nof-ht`, also pass `-f nof_ht_migration_gate_approved=true` once that gate is explicitly accepted; otherwise the validate step fails closed.
 
 Evidence after a real deploy is written under `~/nof-release-builder/evidence/<service>-<sha>-<timestamp>.txt` on hbl. Read it back via the workflow's "Show latest evidence files" step output (`gh run view -R teanores/nof-infra <run-id> --log`) — do not SSH to hbl to fetch it.
+
+## Emergency Manual Flow
+
+Manual SSH/local `nof-release-builder.sh deploy` or `sync` remains available for critical processes, emergency updates, hand repairs and explicitly approved agent operations.
+
+It is not the default product-agent path. Use it only when the owner has explicitly approved manual/emergency mode in the current chat.
+
+Required environment markers:
+
+```bash
+NOF_RELEASE_MANUAL_OVERRIDE=1
+NOF_RELEASE_APPROVAL_ID='<current-chat-owner-approval-or-tracker-evidence-id>'
+```
+
+Example:
+
+```bash
+NOF_RELEASE_MANUAL_OVERRIDE=1 \
+NOF_RELEASE_APPROVAL_ID='NOF-INFRA-...' \
+  /opt/nof-release-builder/nof-release-builder.sh deploy nof-tt v0.2.29
+```
+
+Expected:
+
+- the command logs `Release invocation: manual/emergency`;
+- the approval/evidence id appears in release-builder logs;
+- release evidence is captured after deploy;
+- the owner performs the relevant UAT before the change is considered accepted.
+
+Stop if:
+
+- there is no current-chat owner approval for manual/emergency mode;
+- no evidence id exists;
+- the target service/ref differs from the approved scope;
+- the standard GitHub runner flow is available and there is no emergency/manual reason to bypass it.
 
 ## Local Readiness Checks
 

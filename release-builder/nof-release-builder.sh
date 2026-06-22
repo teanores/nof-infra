@@ -38,6 +38,13 @@ Sync mode requires an explicit service allowlist:
   NOF_RELEASE_SYNC_APPROVED_SERVICES=nof-mp,nof-tt
 
 Unset or empty NOF_RELEASE_SYNC_APPROVED_SERVICES blocks all enabled manifest rows.
+
+Routine product-agent deploys should use the GitHub runner workflow:
+  gh workflow run release-builder.yml -R teanores/nof-infra
+
+Manual/emergency deploys remain available, but require:
+  NOF_RELEASE_MANUAL_OVERRIDE=1
+  NOF_RELEASE_APPROVAL_ID=<current-chat-owner-approval-or-tracker-evidence-id>
 USAGE
 }
 
@@ -63,6 +70,44 @@ require_token() {
     echo "ERROR: NOF_RELEASE_GITHUB_TOKEN is not set. Configure ~/.config/nof-release-builder/env." >&2
     exit 2
   fi
+}
+
+require_release_invocation_context() {
+  local command="$1"
+  local approval_id="${NOF_RELEASE_APPROVAL_ID:-}"
+
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    if [[ -z "${approval_id// }" ]]; then
+      echo "ERROR: NOF_RELEASE_APPROVAL_ID is required for GitHub runner release-builder $command." >&2
+      exit 64
+    fi
+    echo "==> Release invocation: github-runner approval=$approval_id"
+    return 0
+  fi
+
+  if [[ "${NOF_RELEASE_MANUAL_OVERRIDE:-}" == "1" ]]; then
+    if [[ -z "${approval_id// }" ]]; then
+      echo "ERROR: NOF_RELEASE_APPROVAL_ID is required for manual/emergency release-builder $command." >&2
+      exit 64
+    fi
+    echo "==> Release invocation: manual/emergency approval=$approval_id"
+    return 0
+  fi
+
+  cat >&2 <<EOF
+ERROR: release-builder $command refused without an explicit invocation context.
+
+Routine product-agent deploys must use the GitHub runner flow:
+  gh workflow run release-builder.yml -R teanores/nof-infra
+
+Manual SSH/local release-builder remains available for critical or emergency work,
+but it must be explicitly approved and marked:
+  NOF_RELEASE_MANUAL_OVERRIDE=1
+  NOF_RELEASE_APPROVAL_ID=<current-chat-owner-approval-or-tracker-evidence-id>
+
+See docs/runbooks/github-runner-release-builder.md.
+EOF
+  exit 78
 }
 
 make_askpass() {
@@ -365,6 +410,7 @@ deploy_service() {
   local service="$1"
   local ref="$2"
   sanitize_ref "$ref"
+  require_release_invocation_context "deploy"
   service_config "$service"
   load_env
   require_token
@@ -468,6 +514,7 @@ deploy_service() {
 sync_from_manifest() {
   local control_ref="$1"
   sanitize_ref "$control_ref"
+  require_release_invocation_context "sync"
   load_env
   require_token
 
