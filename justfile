@@ -22,6 +22,9 @@ test:
 check-policy environment="hbl":
   .\scripts\check-desired-state-policy.ps1 -Environment {{environment}}
 
+check-mail-dns:
+  .\scripts\check-public-mail-dns.ps1
+
 check-runner-workflow:
   .\scripts\check-github-runner-readiness.ps1 -DocumentationOnly
 
