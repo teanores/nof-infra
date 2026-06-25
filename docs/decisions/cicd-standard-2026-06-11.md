@@ -60,6 +60,8 @@ service repository semver tag
 
 Direct SSH invocation of `nof-release-builder.sh deploy <service> <tag>` is allowed only as an explicitly named manual release-builder mode for a supervised hotfix, incident recovery, or automation outage. It must not be described as GitHub-driven automation in owner communication.
 
+Manual release-builder mode is a nof-infra-agent-only fallback. Product agents must not run direct SSH deploys themselves; they must create or update a nof-infra task with evidence and let nof-infra-agent execute the server-side step. Before nof-infra-agent uses this fallback, there must be a tracker task, a branch when repository changes are involved, current-chat owner approval, and an explicit reason why the standard owner-owned service release trigger or nof-infra GitHub runner path cannot perform the change. Valid reasons include hbl runner outage, server-level runner/release-builder repair, hand recovery during an incident, or infrastructure configuration changes that must happen before the runner can self-deploy.
+
 ## Desired-State Policy
 
 `environments/hbl/desired-state.tsv` is production-bound release control, not a general inventory list.
@@ -145,6 +147,8 @@ Do not deploy user-facing services with raw commit refs. Public UI version marke
 Stop before deploy if:
 
 - service key does not match the NOF naming standard;
+- a product agent is attempting direct SSH/manual release-builder instead of delegating to nof-infra;
+- the standard GitHub runner path is available and there is no documented emergency/manual reason to bypass it;
 - desired-state contains a branch or raw commit for a production row;
 - desired-state would deploy multiple enabled services without explicit owner approval for each;
 - local preflight fails;

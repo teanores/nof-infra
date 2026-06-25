@@ -2,12 +2,16 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $workflow = Join-Path $repoRoot ".github\workflows\release-builder.yml"
+$decision = Join-Path $repoRoot "docs\decisions\cicd-standard-2026-06-11.md"
+$runbook = Join-Path $repoRoot "docs\runbooks\github-runner-release-builder.md"
 
 if (!(Test-Path $workflow)) {
   throw "Workflow file not found: $workflow"
 }
 
 $text = Get-Content $workflow -Raw
+$decisionText = Get-Content $decision -Raw
+$runbookText = Get-Content $runbook -Raw
 
 $required = @(
   "workflow_dispatch:",
@@ -48,6 +52,20 @@ if ($text -match "runs-on:\s*\[self-hosted,\s*linux,\s*nof-ht\]") {
 
 if ($text -match "(?m)^\s*group:\s*nof-release-builder-hbl\s*$") {
   throw "Workflow concurrency group must be scoped per service, not globally per hbl."
+}
+
+$manualFallbackMarkers = @(
+  "Manual release-builder mode is a nof-infra-agent-only fallback.",
+  "Product agents must not run direct SSH deploys themselves",
+  "Use this fallback only when the owner has explicitly approved manual/emergency mode",
+  "standard owner-owned service release trigger or nof-infra GitHub runner path cannot perform the change",
+  'owner-facing briefing names the deploy mode as `manual release-builder`'
+)
+
+foreach ($needle in $manualFallbackMarkers) {
+  if (!$decisionText.Contains($needle) -and !$runbookText.Contains($needle)) {
+    throw "Manual fallback standard missing required marker: $needle"
+  }
 }
 
 Write-Host "github runner workflow policy: ok"

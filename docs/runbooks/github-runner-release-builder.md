@@ -189,7 +189,31 @@ Expected nof-infra behavior after dispatch:
 
 Manual SSH/local `nof-release-builder.sh deploy` or `sync` remains available for critical processes, emergency updates, hand repairs and explicitly approved agent operations.
 
-It is not the default product-agent path. Use it only when the owner has explicitly approved manual/emergency mode in the current chat.
+It is not the default product-agent path. It is a nof-infra-agent-only fallback. Product agents must not run direct SSH/manual release-builder deploys themselves; they must hand the work to nof-infra with a tracker task, service/ref evidence, expected UAT and rollback/stop conditions.
+
+Use this fallback only when the owner has explicitly approved manual/emergency mode in the current chat and the standard owner-owned service release trigger or nof-infra GitHub runner path cannot perform the change.
+
+Valid reasons:
+
+- hbl self-hosted runner outage or misconfiguration;
+- server-level runner/release-builder repair that must happen before the runner can self-deploy;
+- supervised incident recovery or hotfix where the owner explicitly accepts manual mode;
+- infrastructure configuration changes that cannot be made by the current runner workflow.
+
+Invalid reasons:
+
+- convenience;
+- avoiding the release request workflow;
+- missing service-agent context;
+- routine service release while the GitHub runner path is healthy.
+
+Required before running manual mode:
+
+- nof-infra tracker task exists and is current;
+- repository changes, if any, are on a nof-infra branch and have been verified;
+- owner gave current-chat approval for manual/emergency mode;
+- owner-facing briefing names the deploy mode as `manual release-builder`;
+- rollback/stop conditions and evidence location are known.
 
 Required environment markers:
 
@@ -216,6 +240,7 @@ Expected:
 Stop if:
 
 - there is no current-chat owner approval for manual/emergency mode;
+- the request came from a product agent without a nof-infra task handoff;
 - no evidence id exists;
 - the target service/ref differs from the approved scope;
 - the standard GitHub runner flow is available and there is no emergency/manual reason to bypass it.
