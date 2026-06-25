@@ -33,7 +33,7 @@ Local `nof-infra` state after bootstrap:
 - current local desired-state rows on 2026-06-14:
   - `nof-mp` -> `v0.2.47`, disabled;
   - `nof-tt` -> `v0.2.5`, disabled;
-  - `nof-ht` -> `v1.33.59`, disabled because nof-ht still needs a dedicated release window for the naragothal product-bot readiness release.
+  - `nof-ht` -> `v1.33.59`, disabled as inventory; enabling any row remains a one-service owner-approved release-window action.
 
 Use read-only hbl discovery before changing any hbl service, timer, Helm release or Kubernetes object. The local repository state is not proof that the hbl host has the same script installed.
 
@@ -201,16 +201,17 @@ Decision record: `../decisions/cicd-standard-2026-06-11.md`.
 
 Accepted standard: `nof-infra` release-builder and desired-state are the canonical production deployment path for NOF services.
 
-The current hybrid remains operational debt until nof-ht is migrated:
+The current hybrid remains operational debt until all release windows consistently use the owner-owned service trigger:
 
-- `nof-ht` uses GitHub Actions and can be blocked by runner disconnect/backoff.
-- `nof-mp` and `nof-tt` rely on manual scoped release-builder deploys.
+- `nof-ht` legacy deploy workflow is now a manual no-op marker.
+- `nof-mp`, `nof-tt` and `nof-ht` use service-local GitHub Release request bridges to the infra-owned release-builder workflow.
 - `nof-release-builder-sync.timer` also exists, so agents must not assume a single authoritative path.
 
-Until nof-ht is migrated, production deploy requests must name the path explicitly:
+Production deploy requests must name the path explicitly:
 
-- canonical release-builder path for `nof-mp` and `nof-tt`;
-- temporary legacy GitHub Actions runner path for `nof-ht`.
+- canonical `github-runner release-builder` path for owner-owned service release requests;
+- `desired-state automation` only when the release window explicitly uses the timer/pull path;
+- `manual release-builder` only for approved emergency/manual fallback.
 
 As of 2026-06-14, the desired target is stricter:
 
@@ -248,7 +249,7 @@ Evidence must keep the source ref and the public app version separate:
 5. On hbl, backup current script and systemd units.
 6. Install `nof-infra/release-builder/nof-release-builder.sh` to `/opt/nof-release-builder/nof-release-builder.sh`.
 7. Run `nof-release-builder.sh list` and verify it shows `nof-mp`, `nof-tt`, `nof-ht`.
-8. Keep `environments/hbl/desired-state.tsv` rows disabled until local regression and owner UAT approval.
+8. Keep `environments/hbl/desired-state.tsv` rows disabled until a one-service release window has owner approval.
 9. Enable one service at a time.
 
 ## Desired-State Automation Readiness
@@ -378,7 +379,7 @@ Do not call this GitHub automation.
 ## Current Next Steps Without Owner Interaction
 
 - Keep local docs, runbooks and desired-state consistent with NOF naming.
-- Keep `nof-ht` disabled in desired-state until a dedicated migration moves nof-ht from GitHub Actions to release-builder.
+- Keep desired-state rows disabled unless a dedicated release window explicitly approves one service/ref.
 - Keep post-UAT cleanup tasks linked to `MANUAL-C48428C1`, `MANUAL-2F20751D`, `MANUAL-43DB73A9` and `MANUAL-38757CBE`.
 - Prepare read-only command lists only; do not run hbl-changing commands without approval.
 - Add a dedicated `nof-infra` MCP alias/token when project-scoped agent access is needed; do not use nof-tt/nof-mp/nof-ht aliases to mutate nof-infra records.

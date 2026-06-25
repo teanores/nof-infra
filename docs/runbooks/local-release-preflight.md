@@ -33,7 +33,7 @@ Audit default desired-state policy:
 just check-policy
 ```
 
-This policy audit is expected to fail while more than one service row is `enabled=true` or while `nof-ht` remains enabled before its release-builder migration gate is accepted. Treat that failure as release-control debt, not as permission to bypass release approvals.
+This policy audit is expected to fail while more than one service row is `enabled=true`. Treat that failure as release-control debt, not as permission to bypass release approvals.
 
 Then run the stricter preflight:
 
@@ -51,13 +51,13 @@ For a scoped release-builder deploy command such as `deploy nof-ht <tag>`, add `
 
 Use `-ExpectedEnabled false` only when validating a deliberately disabled row. Use `-ExpectedEnabled any` for read-only inventory checks that should not assert deployment state.
 
-For `nof-ht`, `enabled=true` is additionally blocked unless the migration gate has accepted evidence:
+For `nof-ht`, use the same one-service owner-approved release-window flags as other services:
 
 ```powershell
-.\scripts\release-preflight.ps1 -Service nof-ht -ExpectedRef v1.33.52 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-ht -ScopedDeployOnly -NofHtMigrationGateApproved -NofHtMigrationEvidence "IDEA-... / commit ..."
+.\scripts\release-preflight.ps1 -Service nof-ht -ExpectedRef v1.33.52 -Environment hbl -ExpectedEnabled true -ApprovedProductionDeploy -ApprovedServices nof-ht -ScopedDeployOnly
 ```
 
-Do not use this flag until nof-ht has provided release migration evidence and nof-infra migration Job gate is installed for the approved release window.
+`-NofHtMigrationGateApproved` and `-NofHtMigrationEvidence` are legacy compatibility parameters. They are no longer required after the nof-ht release-builder migration gate was closed.
 
 ## Checks
 
@@ -72,7 +72,6 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 - The service `enabled` value matches `-ExpectedEnabled` unless `-ExpectedEnabled any` is used.
 - `-ApprovedProductionDeploy` additionally requires `enabled=true`, but the flag itself is not a deployment and does not contact production.
 - `-ApprovedProductionDeploy` requires `-ApprovedServices` and fails if desired-state contains enabled services outside that explicit approval list, unless `-ScopedDeployOnly` is used for a single-service scoped release-builder deploy.
-- `nof-ht enabled=true` requires `-NofHtMigrationGateApproved` and non-empty `-NofHtMigrationEvidence`.
 - Edge target files do not contain live legacy `forge-tasks.forgath.ru` targets.
 - Edge target files do not contain obvious secret-looking markers.
 - Live infra target files under `helm`, `release-builder` and `environments/<env>` do not contain legacy `FORGE_TASKS_*` runtime env names.
@@ -86,7 +85,6 @@ Do not use this flag until nof-ht has provided release migration evidence and no
 - Desired-state `enabled` does not match the expected release state.
 - Production deploy mode is used without `-ApprovedServices`.
 - Desired-state contains enabled services outside the owner-approved release window and the action is not explicitly scoped to one service.
-- `nof-ht enabled=true` is requested without accepted migration readiness evidence.
 - A target edge file contains `forge-tasks.forgath.ru` as a live hostname.
 - A target edge file contains secret-looking content.
 - A live infra target file reintroduces `FORGE_TASKS_DATABASE_URL`, `FORGE_TASKS_DB_SCHEMA` or `FORGE_TASKS_MCP_TOKEN_SECRET`.

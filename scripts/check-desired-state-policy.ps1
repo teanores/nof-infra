@@ -64,9 +64,4 @@ if ($enabledRows.Count -gt 1) {
   Fail "Routine desired-state policy allows at most one enabled service row by default. Enabled rows: $enabled"
 }
 
-$nofHt = $rows | Where-Object { $_.Service -eq "nof-ht" } | Select-Object -First 1
-if ($nofHt.Enabled -eq "true") {
-  Fail "nof-ht must remain enabled=false until release-builder migration gate is accepted."
-}
-
 Info "desired-state policy ok for $Environment"

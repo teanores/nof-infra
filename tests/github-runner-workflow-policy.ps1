@@ -22,7 +22,7 @@ $required = @(
   "/opt/nof-release-builder/nof-release-builder.sh deploy",
   "Release ref must be a semver tag",
   "approval_id is required",
-  "nof-ht deploy through nof-infra runner is blocked until migration gate approval is explicit.",
+  "Legacy compatibility input; nof-ht migration gate is closed.",
   "permissions:",
   "contents: read",
   'group: nof-release-builder-hbl-${{ inputs.service }}'

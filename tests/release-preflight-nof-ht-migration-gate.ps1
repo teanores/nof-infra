@@ -23,24 +23,11 @@ try {
   $env:NOF_RELEASE_PREFLIGHT_ALLOW_DIRTY_FOR_TESTS = "1"
   $script = Join-Path $repoRoot "scripts\release-preflight.ps1"
 
-  $failedWithoutGate = $false
-  try {
-    & $script -Service nof-ht -ExpectedRef v1.33.51 -Environment $fixtureEnv -ExpectedEnabled true
-  } catch {
-    $failedWithoutGate = $_.Exception.Message -like "*NofHtMigrationGateApproved*" -or $_.ToString() -like "*NofHtMigrationGateApproved*"
-  }
-
-  if (!$failedWithoutGate) {
-    throw "Expected nof-ht preflight to fail without -NofHtMigrationGateApproved"
-  }
-
   & $script `
     -Service nof-ht `
     -ExpectedRef v1.33.51 `
     -Environment $fixtureEnv `
-    -ExpectedEnabled true `
-    -NofHtMigrationGateApproved `
-    -NofHtMigrationEvidence "test-evidence"
+    -ExpectedEnabled true
 
   $deployment = Join-Path $repoRoot "helm\nof-ht\templates\deployment.yaml"
   $originalDeployment = Get-Content $deployment -Raw
@@ -55,9 +42,7 @@ try {
         -Service nof-ht `
         -ExpectedRef v1.33.51 `
         -Environment $fixtureEnv `
-        -ExpectedEnabled true `
-        -NofHtMigrationGateApproved `
-        -NofHtMigrationEvidence "test-evidence"
+        -ExpectedEnabled true
     } catch {
       $failedWithoutHabitBotSecret = $_.Exception.Message -like "*nof-ht-habit-bot-secrets*" -or $_.ToString() -like "*nof-ht-habit-bot-secrets*"
     }
@@ -89,9 +74,7 @@ try {
         -Service nof-ht `
         -ExpectedRef v1.33.51 `
         -Environment $fixtureEnv `
-        -ExpectedEnabled true `
-        -NofHtMigrationGateApproved `
-        -NofHtMigrationEvidence "test-evidence" 2>&1
+        -ExpectedEnabled true 2>&1
       $failedWithLegacyBot = $LASTEXITCODE -ne 0
     } finally {
       $ErrorActionPreference = $previousErrorActionPreference
@@ -104,7 +87,7 @@ try {
     [System.IO.File]::WriteAllText($values, $originalValues, $utf8NoBom)
   }
 
-  Write-Host "release-preflight nof-ht migration gate: ok"
+  Write-Host "release-preflight nof-ht release-builder gate: ok"
 } finally {
   Remove-Item Env:\NOF_RELEASE_PREFLIGHT_ALLOW_DIRTY_FOR_TESTS -ErrorAction SilentlyContinue
   if (Test-Path $fixtureRoot) {

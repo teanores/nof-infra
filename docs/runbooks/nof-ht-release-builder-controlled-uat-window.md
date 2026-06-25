@@ -1,12 +1,14 @@
 # nof-ht Release-Builder Controlled UAT Window
 
-Status: draft, no production approval.
+Status: historical plan; superseded by NOF-INFRA-28.
 Date: 2026-06-11.
 Owner: nof-main / nof-infra / nof-ht.
 
 ## Purpose
 
 Move `nof-ht` from the temporary GitHub Actions deploy path to the canonical `nof-infra` release-builder path only after migration safety evidence is accepted.
+
+NOF-INFRA-28 supersedes this draft: `nof-ht` now uses `.github/workflows/request-nof-infra-release.yml` to request the infra-owned release-builder workflow on GitHub Release publication. The old `.github/workflows/deploy.yml` remains a manual no-op legacy marker.
 
 This runbook is a plan. It does not approve any hbl, Kubernetes, Helm, secret or production action.
 
@@ -86,7 +88,7 @@ Local, before hbl changes:
   -ExpectedEnabled false
 ```
 
-After owner accepts nof-ht migration readiness evidence and the desired-state row is intentionally enabled for the approved window:
+After the desired-state row is intentionally enabled for an approved window:
 
 ```powershell
 .\scripts\release-preflight.ps1 `
@@ -96,9 +98,7 @@ After owner accepts nof-ht migration readiness evidence and the desired-state ro
   -ExpectedEnabled true `
   -ApprovedProductionDeploy `
   -ApprovedServices nof-ht `
-  -ScopedDeployOnly `
-  -NofHtMigrationGateApproved `
-  -NofHtMigrationEvidence "<tracker/wiki/commit evidence>"
+  -ScopedDeployOnly
 ```
 
 ## hbl Install Plan

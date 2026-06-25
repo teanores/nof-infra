@@ -12,7 +12,7 @@ This path is for times when agents or the owner do not have direct SSH access to
 For owner-owned services, the preferred routine trigger is:
 
 ```text
-nof-mp/nof-tt GitHub Release published
+nof-mp/nof-tt/nof-ht GitHub Release published
   -> service-local workflow validates the semver tag
   -> service-local workflow calls nof-infra release-builder.yml through workflow_dispatch
   -> nof-infra hbl runner deploys through release-builder
@@ -88,7 +88,7 @@ The hbl release-builder script can still keep its local global `mkdir` lock. Tha
 | `ref` | semver tag, for example `v0.2.47` |
 | `approval_id` | owner approval / tracker evidence id |
 | `execute_deploy` | `false` validates only; `true` runs production deploy after GitHub environment approval |
-| `nof_ht_migration_gate_approved` | must remain `false` except for an explicitly accepted nof-ht release-builder migration window |
+| `nof_ht_migration_gate_approved` | legacy compatibility input; nof-ht migration gate is closed |
 
 ## Dry Run
 
@@ -110,9 +110,9 @@ Expected:
 
 ## Quick Trigger For Product Agents (gh CLI)
 
-This is the standard manual fallback path for deploying `nof-mp`, `nof-tt` or an approved `nof-ht` migration release to hbl. Direct SSH/manual release-builder deploys remain available as an explicitly approved emergency/manual flow (see NOF-INFRA-16 and "Emergency Manual Flow" below).
+This is the standard manual fallback path for deploying owner-owned services to hbl through the infra-owned workflow. Direct SSH/manual release-builder deploys remain available as an explicitly approved emergency/manual flow (see NOF-INFRA-16 and "Emergency Manual Flow" below).
 
-For routine owner-owned `nof-mp` and `nof-tt` releases, prefer the service-local GitHub Release trigger once installed and proven.
+For routine owner-owned `nof-mp`, `nof-tt` and `nof-ht` releases, prefer the service-local GitHub Release trigger once installed and proven.
 
 Prerequisites:
 
@@ -147,8 +147,6 @@ gh workflow run release-builder.yml -R teanores/nof-infra \
   -f execute_deploy=true
 ```
 
-For `nof-ht`, also pass `-f nof_ht_migration_gate_approved=true` once that gate is explicitly accepted; otherwise the validate step fails closed.
-
 Evidence after a real deploy is written under `~/nof-release-builder/evidence/<service>-<sha>-<timestamp>.txt` on hbl. Read it back via the workflow's "Show latest evidence files" step output (`gh run view -R teanores/nof-infra <run-id> --log`) — do not SSH to hbl to fetch it.
 
 ## Owner-Owned Service Release Trigger
@@ -162,11 +160,11 @@ Owner-owned service repositories may contain a small workflow such as:
 Required behavior:
 
 - trigger only on `release: published` and optional manual validation;
-- fix the service key in the workflow (`nof-mp` in nof-mp, `nof-tt` in nof-tt);
+- fix the service key in the workflow (`nof-mp` in nof-mp, `nof-tt` in nof-tt, `nof-ht` in nof-ht);
 - validate the release tag is semver before dispatching;
 - call `teanores/nof-infra/.github/workflows/release-builder.yml` using GitHub API `workflow_dispatch`;
 - pass `execute_deploy=true` only for real GitHub Release publication;
-- pass `nof_ht_migration_gate_approved=false`;
+- pass `nof_ht_migration_gate_approved=false` only as a legacy compatibility input while the nof-infra workflow still accepts it;
 - never SSH to hbl, run Helm/Kubernetes commands, call `/opt/nof-release-builder` directly, or store hbl credentials.
 
 Required service repository secret:
@@ -367,7 +365,6 @@ Stop if:
 - runner is not infra-owned;
 - runner labels do not include `nof-infra`;
 - GitHub environment approval is missing;
-- `nof-ht` is selected without explicit migration gate approval;
 - workflow can deploy on ordinary push;
 - service-local release request workflow contains SSH, Helm, Kubernetes, hbl host access or direct release-builder commands;
 - a partner/external service attempts to use the owner-owned hbl release trigger without explicit owner decision;

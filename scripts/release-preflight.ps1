@@ -59,13 +59,8 @@ if ($row.Enabled -notin @("true", "false")) {
 if ($ExpectedEnabled -ne "any" -and $row.Enabled -ne $ExpectedEnabled) {
   Fail "Desired-state enabled mismatch for ${Service}: expected '$ExpectedEnabled', got '$($row.Enabled)'"
 }
-if ($Service -eq "nof-ht" -and $row.Enabled -eq "true") {
-  if (!$NofHtMigrationGateApproved) {
-    Fail "nof-ht enabled=true requires -NofHtMigrationGateApproved. nof-ht must not be release-builder deployed until the migration Job gate and nof-ht db:migrate:release evidence are accepted."
-  }
-  if (!$NofHtMigrationEvidence.Trim()) {
-    Fail "nof-ht enabled=true requires -NofHtMigrationEvidence with tracker/wiki/commit evidence for migration readiness."
-  }
+if ($NofHtMigrationGateApproved -or $NofHtMigrationEvidence.Trim()) {
+  Info "nof-ht migration gate options are legacy compatibility markers; the migration gate is closed."
 }
 if ($ApprovedProductionDeploy -and $row.Enabled -ne "true") {
   Fail "Expected $Service enabled=true for owner-approved production deploy, got '$($row.Enabled)'"
