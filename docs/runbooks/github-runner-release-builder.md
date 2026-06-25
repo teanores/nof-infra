@@ -1,6 +1,6 @@
 # GitHub Runner Release-Builder Runbook
 
-Status: live and verified. The `teanores/nof-infra` runner was registered and a real no-op production deploy succeeded on 2026-06-21 (nof-tt redeployed to its current tag v0.2.29, Helm revision 33). This is now the only correct deploy path — no SSH to hbl required.
+Status: live and verified. The `teanores/nof-infra` runner was registered and a real no-op production deploy succeeded on 2026-06-21 (nof-tt redeployed to its current tag v0.2.29, Helm revision 33). This is now the only correct production deploy executor for owner-owned services — no SSH to hbl required for routine releases.
 Owner: nof-infra.
 
 ## Purpose
@@ -8,6 +8,17 @@ Owner: nof-infra.
 Use GitHub Actions as the remote release control plane while keeping production deployment logic in `nof-infra` release-builder on hbl.
 
 This path is for times when agents or the owner do not have direct SSH access to hbl.
+
+For owner-owned services, the preferred routine trigger is:
+
+```text
+nof-mp/nof-tt GitHub Release published
+  -> service-local workflow validates the semver tag
+  -> service-local workflow calls nof-infra release-builder.yml through workflow_dispatch
+  -> nof-infra hbl runner deploys through release-builder
+```
+
+Partner-owned or external services must not inherit this hbl deployment path by default. They configure their own hosting, Git integration and deployment flows unless the owner explicitly moves them into the owner-owned service set.
 
 ## Workflow
 
@@ -99,7 +110,9 @@ Expected:
 
 ## Quick Trigger For Product Agents (gh CLI)
 
-This is the standard daily product-agent path for deploying `nof-mp`, `nof-tt` or `nof-ht` to hbl. Direct SSH/manual release-builder deploys remain available as an explicitly approved emergency/manual flow (see NOF-INFRA-16 and "Emergency Manual Flow" below).
+This is the standard manual fallback path for deploying `nof-mp`, `nof-tt` or an approved `nof-ht` migration release to hbl. Direct SSH/manual release-builder deploys remain available as an explicitly approved emergency/manual flow (see NOF-INFRA-16 and "Emergency Manual Flow" below).
+
+For routine owner-owned `nof-mp` and `nof-tt` releases, prefer the service-local GitHub Release trigger once installed and proven.
 
 Prerequisites:
 
@@ -137,6 +150,40 @@ gh workflow run release-builder.yml -R teanores/nof-infra \
 For `nof-ht`, also pass `-f nof_ht_migration_gate_approved=true` once that gate is explicitly accepted; otherwise the validate step fails closed.
 
 Evidence after a real deploy is written under `~/nof-release-builder/evidence/<service>-<sha>-<timestamp>.txt` on hbl. Read it back via the workflow's "Show latest evidence files" step output (`gh run view -R teanores/nof-infra <run-id> --log`) — do not SSH to hbl to fetch it.
+
+## Owner-Owned Service Release Trigger
+
+Owner-owned service repositories may contain a small workflow such as:
+
+```text
+.github/workflows/request-nof-infra-release.yml
+```
+
+Required behavior:
+
+- trigger only on `release: published` and optional manual validation;
+- fix the service key in the workflow (`nof-mp` in nof-mp, `nof-tt` in nof-tt);
+- validate the release tag is semver before dispatching;
+- call `teanores/nof-infra/.github/workflows/release-builder.yml` using GitHub API `workflow_dispatch`;
+- pass `execute_deploy=true` only for real GitHub Release publication;
+- pass `nof_ht_migration_gate_approved=false`;
+- never SSH to hbl, run Helm/Kubernetes commands, call `/opt/nof-release-builder` directly, or store hbl credentials.
+
+Required service repository secret:
+
+```text
+NOF_INFRA_RELEASE_DISPATCH_TOKEN
+```
+
+This token is only for requesting the nof-infra workflow. It is not an hbl credential and must not grant broader access than needed to dispatch `teanores/nof-infra` workflows.
+
+Expected nof-infra behavior after dispatch:
+
+- validate `service`, `ref`, `approval_id` and desired-state policy;
+- require the `hbl-production` GitHub environment for production deploy;
+- run on `[self-hosted, linux, nof-infra]`;
+- delegate deployment to `/opt/nof-release-builder/nof-release-builder.sh deploy <service> <tag>`;
+- write release-builder evidence.
 
 ## Emergency Manual Flow
 
@@ -297,6 +344,8 @@ Stop if:
 - GitHub environment approval is missing;
 - `nof-ht` is selected without explicit migration gate approval;
 - workflow can deploy on ordinary push;
+- service-local release request workflow contains SSH, Helm, Kubernetes, hbl host access or direct release-builder commands;
+- a partner/external service attempts to use the owner-owned hbl release trigger without explicit owner decision;
 - workflow accepts branch refs or raw commits;
 - job reimplements deployment instead of calling release-builder;
 - logs expose secrets;

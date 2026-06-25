@@ -1,6 +1,6 @@
 # CI/CD Standard Decision - 2026-06-11
 
-Status: accepted working standard for June beta hardening; updated on 2026-06-14 after remote deploy architecture decision.
+Status: accepted working standard for June beta hardening; updated on 2026-06-25 after owner-owned service release trigger clarification.
 Owner: nof-main / nof-infra.
 Tracker: `NOF-INFRA-SPRINT-CICD-20260611`, task `MANUAL-INFRA-CICD-STANDARD`.
 
@@ -30,18 +30,22 @@ service repository tag
   -> owner UAT acceptance
 ```
 
-The target remote operating mode is an approved GitHub Actions release workflow:
+The target remote operating mode for owner-owned services is a service-local GitHub Release trigger that requests the infra-owned release-builder workflow:
 
 ```text
-service repository semver tag
-  -> local service checks and nof-infra preflight
-  -> nof-infra workflow_dispatch with service, tag and approval/evidence id
+owner-owned service repository GitHub Release published
+  -> service-local release workflow validates the semver tag
+  -> service-local release workflow calls nof-infra workflow_dispatch with fixed service, tag and approval/evidence id
   -> hbl self-hosted runner executes release-builder for exactly one approved service/tag
   -> release-builder writes evidence and rollback data
   -> agent reads evidence and requests owner UAT
 ```
 
 The hbl self-hosted runner must be owned by `nof-infra`, not by a single product repository. It is an execution agent for `nof-infra` release-builder, not an independent deployment implementation.
+
+This privileged release trigger is only for owner-owned services such as `nof-mp` and `nof-tt`. Partner-owned or external services must not automatically use NOF hbl or NOF release-builder. Those services must configure their own hosting, Git repository integration and deployment flow unless the owner explicitly moves them into the owner-owned service set.
+
+The service-local workflow is a request bridge only. It must not SSH to hbl, run Helm/Kubernetes commands, or duplicate release-builder logic. Its deploy authority is limited to calling `teanores/nof-infra/.github/workflows/release-builder.yml` through GitHub `workflow_dispatch` with a fixed service key and the published semver tag.
 
 The desired-state timer remains a fail-closed fallback/pull mode:
 
@@ -91,7 +95,7 @@ Service repositories own:
 - service-local migrations;
 - `.env.example` files without secret values.
 
-GitHub Actions may be used for service-local CI checks. Production deploy is canonical only when a GitHub Actions job runs on the infra-owned hbl self-hosted runner and delegates to `nof-infra` release-builder with the same owner approval, evidence and rollback gates.
+GitHub Actions may be used for service-local CI checks and, for owner-owned services, as a release request bridge. Production deploy is canonical only when the final GitHub Actions deploy job runs in `nof-infra` on the infra-owned hbl self-hosted runner and delegates to `nof-infra` release-builder with the same owner approval, evidence and rollback gates.
 
 ## Transition Rule
 
@@ -126,6 +130,7 @@ The agent must also state the deploy mode:
 - `desired-state automation`: push tag and nof-infra desired-state, then wait for hbl sync/timer or a documented pull agent;
 - `manual release-builder`: direct SSH invocation of the hbl release-builder command after approval;
 - `legacy GitHub Actions`: temporary nof-ht exception only.
+- `service release request`: owner-owned service repository published a GitHub Release and dispatched the canonical `nof-infra` workflow; the actual deploy mode remains `github-runner release-builder`.
 
 If the deploy mode is `manual release-builder`, the post-release evidence must explicitly say that the rollout was direct SSH, not passive GitHub automation.
 
@@ -163,5 +168,6 @@ Stop before relying on desired-state automation if:
 - `IDEA-20260613-160A72`: create a dedicated `nof-infra` tracker project and convert this release automation standard into project-scoped epics/tasks.
 - Add a single approved-release command or script that prepares service tag, updates desired-state, runs preflight and prints the exact owner briefing without running production changes.
 - Install and configure the release-builder sync allowlist guard `NOF_RELEASE_SYNC_APPROVED_SERVICES` on hbl, then verify whether hbl sync/timer can safely replace direct SSH deploys for `nof-mp` and `nof-tt`.
-- Create an infra-owned GitHub Actions self-hosted runner workflow in `nof-infra` for remote `workflow_dispatch` production releases.
-- After the infra-owned runner workflow is proven in a controlled release window, make manual deploy emergency-only.
+- DONE: Create an infra-owned GitHub Actions self-hosted runner workflow in `nof-infra` for remote `workflow_dispatch` production releases.
+- Add owner-owned service release request workflows for `nof-mp` and `nof-tt` that call the infra-owned workflow on GitHub Release publication.
+- After owner-owned service release request workflows are proven in controlled release windows, make manual deploy emergency-only for those services.

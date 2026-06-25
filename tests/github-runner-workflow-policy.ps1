@@ -34,6 +34,10 @@ if ($text -match "(?m)^\s+push:") {
   throw "Production release workflow must not run on push."
 }
 
+if ($text -match "(?m)^\s+release:") {
+  throw "nof-infra production release workflow must not run directly on release events; service repositories dispatch approved requests."
+}
+
 if ($text -match "(?m)^\s+pull_request:") {
   throw "Production release workflow must not run on pull_request."
 }
