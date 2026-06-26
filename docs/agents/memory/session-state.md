@@ -6,9 +6,9 @@ Updated: 2026-06-26.
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
 - Active nof-infra sprint: none.
-- Latest closed sprint: `NOF-INFRA-SPRINT-15` — Phase 1 live auth evidence and Phase 2 OIDC infra readiness.
+- Latest closed sprint: `NOF-INFRA-SPRINT-16` — nof-ht OIDC refs and nof-mp release dispatch restore.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
-- `NOF-INFRA-SPRINT-15` is closed as `done`.
+- `NOF-INFRA-SPRINT-16` is closed as `done`.
 - Latest approved production action: `NOF-TT-200` deploy of `nof-tt` `v0.2.36` through nof-infra release-builder.
 - No secret values were read, printed or changed.
 
@@ -43,6 +43,10 @@ Updated: 2026-06-26.
   - accepted nof-tt release `v0.2.36`;
   - release commit/tag `6047ec8 chore: release nof-tt v0.2.36`;
   - deployed via nof-infra GitHub Actions release-builder workflow.
+- `NOF-INFRA-SPRINT-16` closed:
+  - `NOF-INFRA-37` formalized nof-ht forgath.ru OIDC Helm refs;
+  - `NOF-INFRA-36` restored nof-mp GitHub release dispatch bridge;
+  - no additional production/hbl/VPS deploy was run.
 
 ## Verification Evidence
 
@@ -79,6 +83,16 @@ Updated: 2026-06-26.
   - `GET /api/mcp/sse` returned `410 Gone`;
   - `POST /api/mcp/message` returned `410 Gone`;
   - after an idle interval elapsed during post-deploy checks, `nof-tt-mcp.get_mcp_health` succeeded with no `session expired`.
+- nof-ht OIDC Helm refs:
+  - commit `cd75ea2 chore(NOF-INFRA-37): formalize nof-ht oidc refs` pushed to nof-infra `main`;
+  - `NOFMP_CLIENT_ID`, `NOFMP_ISSUER`, `NOF_PLATFORM_AUTHORIZE_URL`, `NOF_PLATFORM_TOKEN_URL`, `NOF_PLATFORM_CLIENT_ID`, `NOF_PLATFORM_ISSUER`, `NOF_PLATFORM_AUDIENCE` are declared via ConfigMap metadata;
+  - `NOFMP_CLIENT_SECRET`, `NOF_PLATFORM_JWT_SECRET` and legacy `NOF_PLATFORM_CLIENT_SECRET` remain Kubernetes Secret keys only, with no values in git/tracker/chat;
+  - `just test` and `git diff --check` passed.
+- nof-mp release dispatch bridge:
+  - GitHub repo secret metadata `NOF_INFRA_RELEASE_DISPATCH_TOKEN` exists in `teanores/nof-mp`, updated `2026-06-26T14:37:45Z`;
+  - validation-only workflow run `https://github.com/teanores/nof-mp/actions/runs/28245045149` succeeded;
+  - validation used `ref=v0.2.88`, `execute_deploy=false`;
+  - log confirmed no nof-infra dispatch was sent.
 
 ## Important Operational Notes
 
@@ -90,6 +104,8 @@ Updated: 2026-06-26.
 - SPRINT-14 deploy-unification remains paused.
 - OpenBao Secrets ADR remains parked; `NOF-INFRA-34` tracks the future pilot.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
+- Applying nof-ht Helm refs to live hbl/nof-ht still requires separate owner approval.
+- Next real nof-mp GitHub Release should validate the restored automatic dispatch bridge under normal release gates.
 
 ## Backlog Candidates
 
@@ -97,7 +113,7 @@ No active sprint exists. Before taking backlog work, run a short planning step o
 
 Known candidates still visible in tracker:
 
-- `NOF-INFRA-22` — revalidate nof-tt `BOT_API_KEY` Helm mount, readiness 60.
 - `NOF-INFRA-34` — OpenBao + ESO secrets management pilot, PARKED, readiness 70.
+- `NOF-INFRA-22` — revalidate nof-tt `BOT_API_KEY` Helm mount, readiness 60.
 - `NOF-INFRA-9` — watch nof-service decomposition support, readiness 60.
 - `NOF-INFRA-25` — post-beta bot gateway Helm/release-builder scaffolding, readiness 40.
