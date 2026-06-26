@@ -17,11 +17,14 @@ telegramHabitBotUsername: "naragothal_bot"
 appVersion: "1.33.59"
 
 # nof-mp OIDC Phase 2 metadata for nof-ht.
-# Client secret value stays in Kubernetes Secret `nof-ht-oauth-secrets`
-# as key `NOFMP_CLIENT_SECRET`; do not commit secret values here.
+# Secret values stay in Kubernetes Secret `nof-ht-oauth-secrets` as keys
+# `NOFMP_CLIENT_SECRET` and `NOF_PLATFORM_JWT_SECRET`; do not commit values here.
 nofMpOidc:
   clientId: "nof-ht"
   issuer: "https://forgath.ru"
+  audience: "nof-ht"
+  authorizeUrl: "https://forgath.ru/oauth/authorize"
+  tokenUrl: "https://forgath.ru/oauth/token"
 
 resources:
   requests:

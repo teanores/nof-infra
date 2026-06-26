@@ -12,3 +12,8 @@ data:
   NEXT_PUBLIC_APP_VERSION: {{ .Values.appVersion | quote }}
   NOFMP_CLIENT_ID: {{ .Values.nofMpOidc.clientId | quote }}
   NOFMP_ISSUER: {{ .Values.nofMpOidc.issuer | quote }}
+  NOF_PLATFORM_AUTHORIZE_URL: {{ .Values.nofMpOidc.authorizeUrl | quote }}
+  NOF_PLATFORM_TOKEN_URL: {{ .Values.nofMpOidc.tokenUrl | quote }}
+  NOF_PLATFORM_CLIENT_ID: {{ .Values.nofMpOidc.clientId | quote }}
+  NOF_PLATFORM_ISSUER: {{ .Values.nofMpOidc.issuer | quote }}
+  NOF_PLATFORM_AUDIENCE: {{ .Values.nofMpOidc.audience | quote }}

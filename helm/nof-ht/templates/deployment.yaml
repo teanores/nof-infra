@@ -25,7 +25,11 @@ spec:
             - secretRef:
                 name: nof-ht-secrets
             - secretRef:
-                # Expected Phase 2 OIDC keys include NOFMP_CLIENT_SECRET.
+                # Expected Phase 2 OIDC keys:
+                # - NOFMP_CLIENT_SECRET
+                # - NOF_PLATFORM_JWT_SECRET
+                # Legacy compatibility key may remain while nof-ht code supports it:
+                # - NOF_PLATFORM_CLIENT_SECRET
                 # Secret values remain in Kubernetes, never in git.
                 name: nof-ht-oauth-secrets
             - secretRef:

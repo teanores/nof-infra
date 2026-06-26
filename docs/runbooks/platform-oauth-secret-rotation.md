@@ -20,8 +20,8 @@ Local nof-infra evidence:
 
 - `helm/nof-mp/values.yaml` mounts `NOF_PLATFORM_OAUTH_JWT_SECRET`, `NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_TT` and `NOF_PLATFORM_OAUTH_CLIENT_SECRET_SHA256_NOF_HT` from `nof-mp-oauth-secrets`;
 - `helm/nof-tt/values.yaml` mounts `NOF_PLATFORM_OAUTH_JWT_SECRET` and `NOF_TT_OAUTH_CLIENT_SECRET` from `nof-tt-oauth-secrets`;
-- `helm/nof-ht/templates/configmap.yaml` exposes Phase 2 nof-mp OIDC metadata `NOFMP_CLIENT_ID` and `NOFMP_ISSUER`;
-- `helm/nof-ht/templates/deployment.yaml` imports `nof-ht-oauth-secrets` through `envFrom`; expected Phase 2 key includes `NOFMP_CLIENT_SECRET`;
+- `helm/nof-ht/templates/configmap.yaml` exposes Phase 2 nof-mp OIDC metadata `NOFMP_CLIENT_ID`, `NOFMP_ISSUER`, plus legacy compatibility metadata `NOF_PLATFORM_AUTHORIZE_URL`, `NOF_PLATFORM_TOKEN_URL`, `NOF_PLATFORM_CLIENT_ID`, `NOF_PLATFORM_ISSUER`, `NOF_PLATFORM_AUDIENCE`;
+- `helm/nof-ht/templates/deployment.yaml` imports `nof-ht-oauth-secrets` through `envFrom`; expected Phase 2 keys include `NOFMP_CLIENT_SECRET` and `NOF_PLATFORM_JWT_SECRET`, while `NOF_PLATFORM_CLIENT_SECRET` may remain for legacy compatibility until nof-ht drops the fallback;
 - `docs/runbooks/hbl-release-builder-migration.md` records the expected OAuth secret resource names.
 
 ## Secret Boundaries
