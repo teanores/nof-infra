@@ -37,6 +37,28 @@ As of 2026-06-05, owner approved deployment of `nof-mp` v0.2.0.
 - Legacy names are allowed only in rollback notes and historical evidence.
 - `forge-tasks.forgath.ru` must not remain as a live public hostname after the Task Tracker cutover.
 
+## NOF-TT-008DC104 Revalidation - 2026-06-26
+
+`NOF-TT-008DC104` requested that the nof-mp gateway switch be captured in
+nof-infra declarative state rather than living only as a manual/live change.
+
+Current nof-infra target state already captures the switch:
+
+- file: `environments/hbl/edge/portal-gateway-configmap.target.yaml`;
+- platform upstream: `server nof-mp:3000;`;
+- public platform host: `forgath.ru` / `www.forgath.ru`.
+
+Verification performed locally:
+
+- static search found the target upstream `server nof-mp:3000;`;
+- no live `nof-platform:3000` upstream exists in the hbl portal-gateway target;
+- no hbl/VPS/Caddy apply was run.
+
+Rollback reference remains historical only:
+
+- legacy rollback upstream: `nof-platform:3000`;
+- pre-switch backup: `/home/nofadminhbl/portal-gateway-configmap.backup-20260605T2110Z.yaml`.
+
 ## Apply Procedure
 
 Only run these steps after explicit owner approval in the current conversation.
