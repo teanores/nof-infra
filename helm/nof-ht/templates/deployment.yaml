@@ -25,6 +25,8 @@ spec:
             - secretRef:
                 name: nof-ht-secrets
             - secretRef:
+                # Expected Phase 2 OIDC keys include NOFMP_CLIENT_SECRET.
+                # Secret values remain in Kubernetes, never in git.
                 name: nof-ht-oauth-secrets
             - secretRef:
                 name: nof-ht-habit-bot-secrets

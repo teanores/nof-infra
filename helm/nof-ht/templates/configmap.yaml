@@ -10,3 +10,5 @@ data:
   NEXT_PUBLIC_TELEGRAM_BOT_ID: {{ .Values.telegramBotId | quote }}
   NEXT_PUBLIC_TELEGRAM_HABIT_BOT_USERNAME: {{ .Values.telegramHabitBotUsername | quote }}
   NEXT_PUBLIC_APP_VERSION: {{ .Values.appVersion | quote }}
+  NOFMP_CLIENT_ID: {{ .Values.nofMpOidc.clientId | quote }}
+  NOFMP_ISSUER: {{ .Values.nofMpOidc.issuer | quote }}
