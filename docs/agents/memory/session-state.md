@@ -6,10 +6,12 @@ Updated: 2026-06-26.
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
 - Active nof-infra sprint: none.
-- Latest closed sprint: `NOF-INFRA-SPRINT-16` — nof-ht OIDC refs and nof-mp release dispatch restore.
+- Agent mode: standby.
+- Latest closed sprint: `NOF-INFRA-SPRINT-17` — nof-tt `v0.2.37` release deploy for Phase 3 isolation.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
-- `NOF-INFRA-SPRINT-16` is closed as `done`.
-- Latest approved production action: `NOF-TT-200` deploy of `nof-tt` `v0.2.36` through nof-infra release-builder.
+- `NOF-INFRA-SPRINT-17` is closed as `done`.
+- Latest approved production action: `NOF-INFRA-38` deploy of `nof-tt` `v0.2.37` through nof-infra release-builder.
+- Next expected real work: standby until owner approves nof-mp release after `NOF-MP-43 + identity` are merged to `main`.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -47,6 +49,13 @@ Updated: 2026-06-26.
   - `NOF-INFRA-37` formalized nof-ht forgath.ru OIDC Helm refs;
   - `NOF-INFRA-36` restored nof-mp GitHub release dispatch bridge;
   - no additional production/hbl/VPS deploy was run.
+- `NOF-INFRA-38` production deploy completed:
+  - accepted nof-tt release `v0.2.37` from nof-tt-agent;
+  - release commit/tag target `3f394b0 chore: release nof-tt v0.2.37`;
+  - created and closed `NOF-INFRA-SPRINT-17` as the approved P0 unblocker sprint;
+  - deployed via nof-infra GitHub Actions release-builder workflow;
+  - recorded evidence in tracker task `NOF-INFRA-38`;
+  - no direct SSH, kubectl or Helm command was run from the local agent session.
 
 ## Verification Evidence
 
@@ -93,6 +102,20 @@ Updated: 2026-06-26.
   - validation-only workflow run `https://github.com/teanores/nof-mp/actions/runs/28245045149` succeeded;
   - validation used `ref=v0.2.88`, `execute_deploy=false`;
   - log confirmed no nof-infra dispatch was sent.
+- nof-tt `NOF-INFRA-38` / Phase 3 isolation release evidence:
+  - GitHub Actions run `28256939509` succeeded;
+  - service/ref `nof-tt` / `v0.2.37`;
+  - release commit `3f394b0`;
+  - image `localhost:32000/nof-tt:3f394b0`;
+  - image digest `sha256:6f62f896c96e68f0e43f79f0af98f1493b7bc8306d4e0e82bcd76c9547f5585e`;
+  - Helm release `nof-tt`, namespace `nof-apps`, revision `40`, status `deployed`;
+  - rollout completed: `deployment "nof-tt" successfully rolled out`;
+  - evidence file `/home/nofadminhbl/nof-release-builder/evidence/nof-tt-3f394b0-20260626T181901Z.txt`.
+- nof-tt `NOF-INFRA-38` post-deploy smoke:
+  - `GET https://task-tracker.forgath.ru/api/mcp` with `Accept: text/event-stream` returned `405 Method Not Allowed` and `Allow: POST`;
+  - unauthenticated `GET https://task-tracker.forgath.ru/api/projects/nof-tt/wiki` returned `401` and did not return wiki data;
+  - `HEAD https://task-tracker.forgath.ru/` returned `307` to `/projects`;
+  - `nof-infra-mcp.get_mcp_health` reported healthy tracker operations after deploy.
 
 ## Important Operational Notes
 
@@ -106,6 +129,8 @@ Updated: 2026-06-26.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
 - Applying nof-ht Helm refs to live hbl/nof-ht still requires separate owner approval.
 - Next real nof-mp GitHub Release should validate the restored automatic dispatch bridge under normal release gates.
+- Standby rule for next session: do not start new nof-infra work until the owner or discovery-agent provides a ready sprint/task. The expected next production-bound work is nof-mp release after `NOF-MP-43 + identity` merge to `main` and explicit owner approval in the current chat.
+- Rollback target for `NOF-INFRA-38`, if separately approved later: nof-tt `v0.2.36`.
 
 ## Backlog Candidates
 
