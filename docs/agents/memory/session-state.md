@@ -1,91 +1,73 @@
 # nof-infra Agent Session State
 
-Updated: 2026-06-25.
+Updated: 2026-06-26.
 
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
-- Active nof-infra sprint: none.
+- Active nof-infra sprint: `NOF-INFRA-SPRINT-15` — Phase 1 live auth evidence and Phase 2 OIDC infra readiness.
 - Latest closed sprint: `NOF-INFRA-SPRINT-14` — GitHub-driven release automation standard.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
-- `nof-ht` `main` is clean and aligned with `origin/main`.
+- `NOF-INFRA-SPRINT-15` has one remaining open task: `NOF-INFRA-31`.
 - No hbl/VPS/production-changing command was run in the latest session.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
 
-- `NOF-INFRA-27` closed:
-  - added/codified owner-owned service release request bridge for `nof-mp` and `nof-tt`;
-  - service GitHub Release publication now requests `nof-infra` `release-builder.yml` through `workflow_dispatch`;
-  - merged and pushed:
-    - nof-infra `a5366bf docs(NOF-INFRA-27): codify owner-owned release dispatch`;
-    - nof-mp `95b97e6 chore(NOF-INFRA-27): request infra release on publication`;
-    - nof-tt `cd6f704 chore(NOF-INFRA-27): request infra release on publication`.
-- `NOF-INFRA-29` closed:
-  - codified direct SSH/manual release-builder as a `nof-infra-agent`-only emergency fallback;
-  - product agents must hand off direct SSH deploy needs to nof-infra instead of running them directly;
-  - updated nof-tt Wiki page `agent-priority-order-delegation-standard`;
-  - merged and pushed nof-infra `60f7b32 docs(NOF-INFRA-29): codify emergency ssh fallback`.
-- `NOF-INFRA-28` closed:
-  - migrated `nof-ht` to the same release request bridge;
-  - added `nof-ht/.github/workflows/request-nof-infra-release.yml`;
-  - kept `nof-ht/.github/workflows/deploy.yml` as a manual no-op legacy marker;
-  - closed the nof-ht-specific release-builder migration gate in nof-infra validation while keeping the old input as compatibility;
-  - merged and pushed:
-    - nof-infra `18476e1 chore(NOF-INFRA-28): close nof-ht release-builder gate`;
-    - nof-ht `5ed0962 chore(NOF-INFRA-28): request infra release on publication`.
-- `NOF-INFRA-SPRINT-14` closed as `done`.
+- Step 0 MCP self-check completed:
+  - `nof-infra-mcp` is available;
+  - `get_mcp_health` reports tracker operations closed and healthy;
+  - `get_delivery_model` and `get_project_standards` were reread;
+  - `NOF-INFRA-SPRINT-15` was created through MCP.
+- `NOF-INFRA-30` closed:
+  - old branch `chore/nof-infra-30/preserve-migration-utils` was stale relative to current `main` and would have reverted later release-builder work, so it was not merged directly;
+  - preserved only reusable migration utilities on a fresh branch;
+  - merged and pushed nof-infra `4a9e381 chore(NOF-INFRA-30): preserve migration utility scripts`.
+- `NOF-INFRA-32` closed:
+  - added nof-ht Helm metadata/env refs for Phase 2 OIDC: `NOFMP_CLIENT_ID`, `NOFMP_ISSUER`, expected secret key `NOFMP_CLIENT_SECRET`;
+  - did not add `NOF_MP_OAUTH_CLIENT_SECRET` to nof-tt because current nof-tt runtime uses `NOF_TT_OAUTH_CLIENT_SECRET` and has no runtime consumer for that alias;
+  - merged and pushed nof-infra `959a30a chore(NOF-INFRA-32): wire nof-ht oidc env refs`.
+- `NOF-INFRA-33` closed:
+  - recorded that nof-mp gateway switch for `NOF-TT-008DC104` is already captured in nof-infra declarative state;
+  - documented target upstream `server nof-mp:3000;` in `environments/hbl/edge/portal-gateway-configmap.target.yaml`;
+  - merged and pushed nof-infra `792f127 docs(NOF-INFRA-33): record gateway switch evidence`.
 
 ## Verification Evidence
 
 - `just test` passed in `nof-infra`.
 - `git diff --check` passed in `nof-infra` and `nof-ht`.
-- Static workflow check confirmed the new `nof-ht` request workflow has:
-  - `release: published` and manual validation triggers;
-  - fixed service key `nof-ht`;
-  - `NOF_INFRA_RELEASE_DISPATCH_TOKEN` as the request token;
-  - no `push` or `pull_request` deploy trigger;
-  - no self-hosted runner, SSH, hbl host access, Helm/Kubernetes command or direct `/opt/nof-release-builder` invocation.
+- Public nof-mp smoke passed:
+  - `https://forgath.ru/` returned `200 OK`;
+  - `https://forgath.ru/login` returned `200 OK` and rendered the login form;
+  - `https://forgath.ru/register` returned `200 OK`.
+- Local nof-mp release evidence:
+  - `origin/main` currently points at `c8d8592 chore: release nof-mp v0.2.86`;
+  - recent release tags include `v0.2.86`, `v0.2.85`, `v0.2.84`.
 
-## Current Release Standard
+## Open Sprint Blocker
 
-Routine owner-owned service releases should follow:
-
-```text
-service GitHub Release published
-  -> service-local request workflow validates semver tag
-  -> service workflow dispatches teanores/nof-infra release-builder.yml
-  -> nof-infra hbl runner executes release-builder
-  -> release-builder writes evidence
-  -> owner UAT
-```
-
-Owner-owned services currently covered:
-
-- `nof-mp`;
-- `nof-tt`;
-- `nof-ht`.
-
-Partner-owned or external services must not inherit this hbl deployment path by default.
+- `NOF-INFRA-31` remains active because required hbl read-only production evidence is not available yet.
+- Failed read-only checks:
+  - `ssh nofadminhbl@192.168.1.51 ...` closed the connection;
+  - configured `ssh 192.168.1.51 ...` also closed the connection;
+  - `Test-NetConnection 192.168.1.51 -Port 22` timed out.
+- Not confirmed yet:
+  - live nof-mp image;
+  - Helm revision;
+  - release-builder evidence file path;
+  - runtime env presence for mail delivery and auth provider.
+- No real registration email was sent because that is a side-effect/UAT action and needs explicit owner approval plus test recipient.
 
 ## Important Operational Notes
 
-- `NOF_INFRA_RELEASE_DISPATCH_TOKEN` must exist in each owner-owned service repository before the first real automatic release request can work.
-- First real dispatches still need GitHub environment approval, release-builder evidence review and owner UAT.
-- Desired-state/timer remains a fail-closed fallback/pull mode, not the standard daily release path.
-- Manual SSH/local release-builder remains available only as an explicitly approved emergency/manual fallback for `nof-infra-agent`.
+- `NOF-INFRA-SPRINT-15` must not be closed until `NOF-INFRA-31` has the missing hbl/release-builder evidence.
+- Next safe step: restore or confirm read-only hbl access for this agent, or provide release-builder/GitHub Actions evidence for the nof-mp deploy.
+- After evidence is available, rerun metadata-only checks and close `NOF-INFRA-31`.
 - Do not run hbl/VPS/production-changing commands without explicit owner approval in the current conversation.
 - Do not print or store game passwords, private keys, tokens, database URLs or Kubernetes secret values.
+- SPRINT-14 deploy-unification remains paused.
+- OpenBao Secrets ADR remains parked.
 
 ## Backlog Candidates
 
-No active sprint exists. Before continuing implementation, plan or accept a new focused `NOF-INFRA-SPRINT-*`.
-
-Known candidates from tracker:
-
-- `NOF-INFRA-22` — revalidate nof-tt `BOT_API_KEY` Helm mount, readiness 60.
-- `NOF-INFRA-30` — preserve reusable secret/configmap migration utilities in `nof-infra/scripts`, readiness 100.
-- `NOF-INFRA-9` — watch nof-service decomposition support, readiness 60.
-- `NOF-INFRA-25` — post-beta bot gateway Helm/release-builder scaffolding, readiness 40.
-
-Recommendation for the next session: wait for discovery-agent priorities or run a short sprint-planning step before taking backlog work.
+Do not take backlog work until `NOF-INFRA-SPRINT-15` is resolved or explicitly replanned.
