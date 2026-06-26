@@ -9,7 +9,7 @@ Updated: 2026-06-26.
 - Latest closed sprint: `NOF-INFRA-SPRINT-15` — Phase 1 live auth evidence and Phase 2 OIDC infra readiness.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
 - `NOF-INFRA-SPRINT-15` is closed as `done`.
-- No hbl/VPS/production-changing command was run in the latest session.
+- Latest approved production action: `NOF-TT-200` deploy of `nof-tt` `v0.2.36` through nof-infra release-builder.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -35,6 +35,14 @@ Updated: 2026-06-26.
   - recorded nof-mp release-builder production evidence for `v0.2.87`;
   - verified public auth/OIDC/mail-boundary endpoints with read-only and negative-smoke checks;
   - closed `NOF-INFRA-SPRINT-15` as `done`.
+- `NOF-INFRA-34` created as PARKED backlog:
+  - `Secrets management pilot: OpenBao + ESO (one local token, one prod secret)  PARKED`;
+  - linked in description to `NOF-INFRA-DECISION-1`;
+  - not added to a sprint, readiness 70, blocked by owner accept and keystone/OpenBao deployment choices.
+- `NOF-TT-200` production deploy completed:
+  - accepted nof-tt release `v0.2.36`;
+  - release commit/tag `6047ec8 chore: release nof-tt v0.2.36`;
+  - deployed via nof-infra GitHub Actions release-builder workflow.
 
 ## Verification Evidence
 
@@ -57,6 +65,20 @@ Updated: 2026-06-26.
   - `https://forgath.ru/password-reset` returned `200 OK`;
   - `https://forgath.ru/api/internal/email/password-reset` without bearer token returned controlled `401 unauthorized`;
   - `https://forgath.ru/api/public/registration/request` with invalid email returned controlled redirect to `/register?error=invalid_email`.
+- nof-tt `NOF-TT-200` release evidence:
+  - GitHub Actions run `28236712967` succeeded;
+  - service/ref `nof-tt` / `v0.2.36`;
+  - image `localhost:32000/nof-tt:6047ec8`;
+  - image digest `sha256:24ac2511be1a792f381bad1c4a44f7ecf8c0e92aa7df30c0b68a1dbb1bacd6a5`;
+  - Helm release `nof-tt`, namespace `nof-apps`, revision `39`, status `deployed`;
+  - rollout completed: `deployment "nof-tt" successfully rolled out`;
+  - evidence file `/home/nofadminhbl/nof-release-builder/evidence/nof-tt-6047ec8-20260626T120433Z.txt`.
+- nof-tt `NOF-TT-200` post-deploy smoke:
+  - `https://task-tracker.forgath.ru/` returned `307` to `/projects`;
+  - `GET /api/mcp` with `Accept: text/event-stream` returned `405 Method Not Allowed` and `Allow: POST`;
+  - `GET /api/mcp/sse` returned `410 Gone`;
+  - `POST /api/mcp/message` returned `410 Gone`;
+  - after an idle interval elapsed during post-deploy checks, `nof-tt-mcp.get_mcp_health` succeeded with no `session expired`.
 
 ## Important Operational Notes
 
@@ -66,7 +88,8 @@ Updated: 2026-06-26.
 - Do not run hbl/VPS/production-changing commands without explicit owner approval in the current conversation.
 - Do not print or store game passwords, private keys, tokens, database URLs or Kubernetes secret values.
 - SPRINT-14 deploy-unification remains paused.
-- OpenBao Secrets ADR remains parked.
+- OpenBao Secrets ADR remains parked; `NOF-INFRA-34` tracks the future pilot.
+- `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
 
 ## Backlog Candidates
 
@@ -75,5 +98,6 @@ No active sprint exists. Before taking backlog work, run a short planning step o
 Known candidates still visible in tracker:
 
 - `NOF-INFRA-22` — revalidate nof-tt `BOT_API_KEY` Helm mount, readiness 60.
+- `NOF-INFRA-34` — OpenBao + ESO secrets management pilot, PARKED, readiness 70.
 - `NOF-INFRA-9` — watch nof-service decomposition support, readiness 60.
 - `NOF-INFRA-25` — post-beta bot gateway Helm/release-builder scaffolding, readiness 40.
