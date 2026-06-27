@@ -5,13 +5,13 @@ Updated: 2026-06-26.
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
-- Active nof-infra sprint: none.
-- Agent mode: standby.
+- Active nof-infra sprint: `NOF-INFRA-SPRINT-18`.
+- Agent mode: active, blocked at release preflight.
 - Latest closed sprint: `NOF-INFRA-SPRINT-17` — nof-tt `v0.2.37` release deploy for Phase 3 isolation.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
 - `NOF-INFRA-SPRINT-17` is closed as `done`.
 - Latest approved production action: `NOF-INFRA-38` deploy of `nof-tt` `v0.2.37` through nof-infra release-builder.
-- Next expected real work: standby until owner approves nof-mp release after `NOF-MP-43 + identity` are merged to `main`.
+- Current real work: prepare gated nof-mp release after `NOF-MP-43 + identity` are merged into one approved release ref.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -56,6 +56,13 @@ Updated: 2026-06-26.
   - deployed via nof-infra GitHub Actions release-builder workflow;
   - recorded evidence in tracker task `NOF-INFRA-38`;
   - no direct SSH, kubectl or Helm command was run from the local agent session.
+- `NOF-INFRA-SPRINT-18` started:
+  - active task `NOF-INFRA-39`;
+  - purpose: gated nof-mp prod release for `NOF-MP-43` launch-button fix plus canonical identity schema;
+  - release is stopped at freshness gate because `origin/main` contains identity merge `e36a14d` but not the launch fix `b3317c2`;
+  - latest visible tag `v0.2.89` points to `6bd2c03` and is not suitable for this release;
+  - runbook prepared at `docs/runbooks/nof-mp-phase3-launch-identity-release.md`;
+  - no production deploy, desired-state flip, SSH, kubectl or Helm command was run.
 
 ## Verification Evidence
 
@@ -131,6 +138,14 @@ Updated: 2026-06-26.
 - Next real nof-mp GitHub Release should validate the restored automatic dispatch bridge under normal release gates.
 - Standby rule for next session: do not start new nof-infra work until the owner or discovery-agent provides a ready sprint/task. The expected next production-bound work is nof-mp release after `NOF-MP-43 + identity` merge to `main` and explicit owner approval in the current chat.
 - Rollback target for `NOF-INFRA-38`, if separately approved later: nof-tt `v0.2.36`.
+- `NOF-INFRA-39` release preflight blocker:
+  - nof-mp `origin/main` is `e36a14d` and contains canonical identity schema;
+  - nof-mp `origin/main` does not contain `NOF-MP-43`;
+  - `origin/bugfix/NOF-MP-43/launch-button-same-origin` is `b3317c2`;
+  - `v0.2.89` is `6bd2c03`, older than the target scope;
+  - local nof-mp worktree currently has uncommitted changes in another agent's identity files; nof-infra must not overwrite them;
+  - continue only after nof-mp provides a semver release tag containing both identity and launch-fix scopes.
+- `NOF-INFRA-39` remains production-gated: no deploy without a final owner in-chat GO after release ref/checklist are presented.
 
 ## Backlog Candidates
 
