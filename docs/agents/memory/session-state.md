@@ -6,12 +6,12 @@ Updated: 2026-06-27.
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
 - Active nof-infra sprint: none.
-- Agent mode: standby after approved CSP hotfix.
-- Latest closed sprint: `NOF-INFRA-SPRINT-19` — portal-gateway CSP `form-action` hotfix for OIDC consent handoff.
+- Agent mode: standby after nof-mp release deploy.
+- Latest closed sprint: `NOF-INFRA-SPRINT-20` — nof-mp `v0.2.91` admin identity reconciliation console deploy.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
-- `NOF-INFRA-SPRINT-19` is closed as `done`.
-- Latest approved production action: `NOF-INFRA-40` direct hbl apply/reload of `portal-gateway` ConfigMap CSP hotfix.
-- Latest completed work: portal-gateway platform CSP now allows OIDC consent form handoff to Task Tracker and Habit Tracker product callback origins.
+- `NOF-INFRA-SPRINT-20` is closed as `done`.
+- Latest approved production action: `NOF-INFRA-41` deploy of nof-mp `v0.2.91` through github-runner release-builder.
+- Latest completed work: admin identity reconciliation console shipped to production; no prod identity DATA migration was run.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -75,6 +75,13 @@ Updated: 2026-06-27.
   - widened only platform `forgath.ru` CSP `form-action` to include `https://task-tracker.forgath.ru` and `https://habit-tracker.forgath.ru`;
   - product hosts kept `form-action 'self'` and `frame-ancestors 'self'`;
   - no secret values were read, printed or changed.
+- `NOF-INFRA-SPRINT-20` closed:
+  - owner approved production deploy in-chat on 2026-06-27;
+  - closed task `NOF-INFRA-41`;
+  - deployed nof-mp `v0.2.91` through github-runner release-builder;
+  - shipped admin identity reconciliation console to production;
+  - no prod identity DATA migration was run;
+  - manual per-person owner reconciliation remains a separate owner/UAT action.
 
 ## Verification Evidence
 
@@ -169,6 +176,26 @@ Updated: 2026-06-27.
   - `deployment "portal-gateway" successfully rolled out`;
   - live `https://forgath.ru/login` CSP includes `form-action 'self' https://task-tracker.forgath.ru https://habit-tracker.forgath.ru`;
   - live `https://task-tracker.forgath.ru/` and `https://habit-tracker.forgath.ru/` keep enforced CSP with `frame-ancestors 'self'` and `form-action 'self'`.
+- nof-mp `NOF-INFRA-41` / `v0.2.91` release evidence:
+  - owner approved production deploy in-chat on 2026-06-27;
+  - release commit `2c523e4b4c9dca59283239abff7d0c9c77425eee`;
+  - release tag `v0.2.91`;
+  - pre-deploy dry-run workflow `28300662382` succeeded with `execute_deploy=false`;
+  - production GitHub Actions run `28300729896` succeeded;
+  - service/ref `nof-mp` / `v0.2.91`;
+  - image `localhost:32000/nof-mp:2c523e4`;
+  - image digest `sha256:ab1dab5688f6c5f8004bddf42200324fe62172864cc4bcd864ede4dc7cf4400e`;
+  - Helm release `nof-mp`, namespace `nof-apps`, revision `121`, status `deployed`;
+  - rollout completed: `deployment "nof-mp" successfully rolled out`;
+  - evidence file `/home/nofadminhbl/nof-release-builder/evidence/nof-mp-2c523e4-20260627T202334Z.txt`;
+  - release-builder logged `Migration gate: not required for nof-mp`, so no prod identity DATA migration was run.
+- nof-mp `NOF-INFRA-41` post-deploy smoke:
+  - `https://forgath.ru/login` returned `200 OK`;
+  - `https://forgath.ru/.well-known/openid-configuration` returned `200 OK` with issuer `https://forgath.ru`;
+  - unauthenticated `https://forgath.ru/admin` returned `307` to `/login?next=%2Fadmin`;
+  - unauthenticated `https://forgath.ru/admin/users` returned `307` to `/login?next=%2Fadmin%2Fusers`;
+  - `https://forgath.ru/products/task-tracker/launch` returned `303` to `/login?next=%2Fproducts%2Ftask-tracker%2Flaunch`;
+  - live CSP still includes the `NOF-INFRA-40` `form-action` allowlist for task-tracker and habit-tracker.
 
 ## Important Operational Notes
 
@@ -181,23 +208,19 @@ Updated: 2026-06-27.
 - OpenBao Secrets ADR remains parked; `NOF-INFRA-34` tracks the future pilot.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
 - Applying nof-ht Helm refs to live hbl/nof-ht still requires separate owner approval.
-- Next real nof-mp GitHub Release should validate the restored automatic dispatch bridge under normal release gates.
+- nof-mp `v0.2.91` was deployed through the infra-owned github-runner release-builder path; automatic service release dispatch remains available for future normal release gates.
 - Standby rule for next session: do not start new nof-infra work until the owner or discovery-agent provides a ready sprint/task.
 - Rollback target for `NOF-INFRA-38`, if separately approved later: nof-tt `v0.2.36`.
-- `NOF-INFRA-39` release preflight blocker:
-  - nof-mp `origin/main` is `e36a14d` and contains canonical identity schema;
-  - nof-mp `origin/main` does not contain `NOF-MP-43`;
-  - `origin/bugfix/NOF-MP-43/launch-button-same-origin` is `b3317c2`;
-  - `v0.2.89` is `6bd2c03`, older than the target scope;
-  - local nof-mp worktree currently has uncommitted changes in another agent's identity files; nof-infra must not overwrite them;
-  - continue only after nof-mp provides a semver release tag containing both identity and launch-fix scopes.
-- `NOF-INFRA-39` remains production-gated: no deploy without a final owner in-chat GO after release ref/checklist are presented.
 - `NOF-INFRA-39` is done. Remaining UAT caveat:
   - public unauthenticated pages did not expose a visible `v0.2.90` footer/version marker;
   - owner/authenticated UAT should verify the portal footer/version marker, or nof-mp should add a future public version endpoint if that evidence must be machine-checkable.
 - `NOF-INFRA-40` is done. Remaining owner UAT:
   - authenticated OIDC consent approve into Task Tracker should complete without browser CSP `form-action` violation;
   - authenticated OIDC consent approve into Habit Tracker should complete without browser CSP `form-action` violation.
+- `NOF-INFRA-41` is done. Remaining owner UAT:
+  - login as admin and open the admin identity reconciliation console;
+  - verify the console is admin-only and performs no writes until explicit owner action;
+  - reconcile owner accounts manually as a separate per-person step.
 
 ## Backlog Candidates
 
