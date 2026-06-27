@@ -5,13 +5,13 @@ Updated: 2026-06-26.
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
-- Active nof-infra sprint: `NOF-INFRA-SPRINT-18`.
-- Agent mode: active, blocked at release preflight.
+- Active nof-infra sprint: none.
+- Agent mode: standby after release deploy.
 - Latest closed sprint: `NOF-INFRA-SPRINT-17` — nof-tt `v0.2.37` release deploy for Phase 3 isolation.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
 - `NOF-INFRA-SPRINT-17` is closed as `done`.
 - Latest approved production action: `NOF-INFRA-38` deploy of `nof-tt` `v0.2.37` through nof-infra release-builder.
-- Current real work: prepare gated nof-mp release after `NOF-MP-43 + identity` are merged into one approved release ref.
+- Latest completed work: nof-mp `v0.2.90` production release for `NOF-INFRA-39`.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -63,6 +63,11 @@ Updated: 2026-06-26.
   - latest visible tag `v0.2.89` points to `6bd2c03` and is not suitable for this release;
   - runbook prepared at `docs/runbooks/nof-mp-phase3-launch-identity-release.md`;
   - no production deploy, desired-state flip, SSH, kubectl or Helm command was run.
+- `NOF-INFRA-SPRINT-18` closed:
+  - owner approved production deploy in-chat on 2026-06-27;
+  - deployed nof-mp `v0.2.90` through GitHub runner release-builder;
+  - closed task `NOF-INFRA-39` as done with release-builder and public smoke evidence;
+  - no prod identity DATA migration was run.
 
 ## Verification Evidence
 
@@ -123,6 +128,28 @@ Updated: 2026-06-26.
   - unauthenticated `GET https://task-tracker.forgath.ru/api/projects/nof-tt/wiki` returned `401` and did not return wiki data;
   - `HEAD https://task-tracker.forgath.ru/` returned `307` to `/projects`;
   - `nof-infra-mcp.get_mcp_health` reported healthy tracker operations after deploy.
+- nof-mp `NOF-INFRA-39` / `v0.2.90` release evidence:
+  - GitHub Actions run `28293504824` succeeded;
+  - service/ref `nof-mp` / `v0.2.90`;
+  - release commit `f7cc53f`;
+  - image `localhost:32000/nof-mp:f7cc53f`;
+  - image digest `sha256:a4bac7ffa54d2b5eb4425712c02bb6dc8ccc52ef6a5cb027923f03817c966730`;
+  - Helm release `nof-mp`, namespace `nof-apps`, revision `120`, status `deployed`;
+  - rollout completed: `deployment "nof-mp" successfully rolled out`;
+  - evidence file `/home/nofadminhbl/nof-release-builder/evidence/nof-mp-f7cc53f-20260627T153030Z.txt`;
+  - release-builder logged `Migration gate: not required for nof-mp`, so no prod identity DATA migration was run.
+- nof-mp `NOF-INFRA-39` pre-deploy checks:
+  - `npm run test -- --run`: 96 files / 387 tests passed;
+  - `npm run typecheck`: passed;
+  - `npm run lint`: passed;
+  - `npm run build`: passed;
+  - `git diff --check`: passed.
+- nof-mp `NOF-INFRA-39` post-deploy smoke:
+  - `https://forgath.ru/login` returned `200 OK`;
+  - `https://forgath.ru/.well-known/openid-configuration` returned `200 OK` with issuer `https://forgath.ru`;
+  - `https://forgath.ru/products/task-tracker/launch` returned `303` to `/login?next=%2Fproducts%2Ftask-tracker%2Flaunch`, then login returned `200 OK`;
+  - `https://forgath.ru/overview` returned `307` to `/login?next=%2Foverview`;
+  - `https://forgath.ru/` returned `200 OK` from the public static landing page.
 
 ## Important Operational Notes
 
@@ -146,6 +173,9 @@ Updated: 2026-06-26.
   - local nof-mp worktree currently has uncommitted changes in another agent's identity files; nof-infra must not overwrite them;
   - continue only after nof-mp provides a semver release tag containing both identity and launch-fix scopes.
 - `NOF-INFRA-39` remains production-gated: no deploy without a final owner in-chat GO after release ref/checklist are presented.
+- `NOF-INFRA-39` is done. Remaining UAT caveat:
+  - public unauthenticated pages did not expose a visible `v0.2.90` footer/version marker;
+  - owner/authenticated UAT should verify the portal footer/version marker, or nof-mp should add a future public version endpoint if that evidence must be machine-checkable.
 
 ## Backlog Candidates
 
