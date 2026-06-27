@@ -1,17 +1,17 @@
 # nof-infra Agent Session State
 
-Updated: 2026-06-26.
+Updated: 2026-06-27.
 
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
 - Active nof-infra sprint: none.
-- Agent mode: standby after release deploy.
-- Latest closed sprint: `NOF-INFRA-SPRINT-17` — nof-tt `v0.2.37` release deploy for Phase 3 isolation.
+- Agent mode: standby after approved CSP hotfix.
+- Latest closed sprint: `NOF-INFRA-SPRINT-19` — portal-gateway CSP `form-action` hotfix for OIDC consent handoff.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
-- `NOF-INFRA-SPRINT-17` is closed as `done`.
-- Latest approved production action: `NOF-INFRA-38` deploy of `nof-tt` `v0.2.37` through nof-infra release-builder.
-- Latest completed work: nof-mp `v0.2.90` production release for `NOF-INFRA-39`.
+- `NOF-INFRA-SPRINT-19` is closed as `done`.
+- Latest approved production action: `NOF-INFRA-40` direct hbl apply/reload of `portal-gateway` ConfigMap CSP hotfix.
+- Latest completed work: portal-gateway platform CSP now allows OIDC consent form handoff to Task Tracker and Habit Tracker product callback origins.
 - No secret values were read, printed or changed.
 
 ## Completed Work In Latest Session
@@ -68,6 +68,13 @@ Updated: 2026-06-26.
   - deployed nof-mp `v0.2.90` through GitHub runner release-builder;
   - closed task `NOF-INFRA-39` as done with release-builder and public smoke evidence;
   - no prod identity DATA migration was run.
+- `NOF-INFRA-SPRINT-19` closed:
+  - owner approved production apply/reload in-chat on 2026-06-27;
+  - closed task `NOF-INFRA-40`;
+  - applied `portal-gateway` ConfigMap hotfix on hbl;
+  - widened only platform `forgath.ru` CSP `form-action` to include `https://task-tracker.forgath.ru` and `https://habit-tracker.forgath.ru`;
+  - product hosts kept `form-action 'self'` and `frame-ancestors 'self'`;
+  - no secret values were read, printed or changed.
 
 ## Verification Evidence
 
@@ -150,12 +157,24 @@ Updated: 2026-06-26.
   - `https://forgath.ru/products/task-tracker/launch` returned `303` to `/login?next=%2Fproducts%2Ftask-tracker%2Flaunch`, then login returned `200 OK`;
   - `https://forgath.ru/overview` returned `307` to `/login?next=%2Foverview`;
   - `https://forgath.ru/` returned `200 OK` from the public static landing page.
+- portal-gateway `NOF-INFRA-40` CSP hotfix evidence:
+  - nof-infra commit `79e637b fix: allow product oauth callbacks in platform csp`;
+  - runbook `docs/runbooks/portal-gateway-csp-form-action-hotfix.md`;
+  - `just test` passed before apply;
+  - `git diff --check` passed before apply;
+  - reviewed target copied to hbl as `/tmp/portal-gateway-configmap.target-NOF-INFRA-40.yaml`;
+  - backup created on hbl: `/home/nofadminhbl/portal-gateway-configmap.backup-20260627T175453Z.yaml`;
+  - `kubectl apply` returned `configmap/portal-gateway configured`;
+  - `deployment.apps/portal-gateway restarted`;
+  - `deployment "portal-gateway" successfully rolled out`;
+  - live `https://forgath.ru/login` CSP includes `form-action 'self' https://task-tracker.forgath.ru https://habit-tracker.forgath.ru`;
+  - live `https://task-tracker.forgath.ru/` and `https://habit-tracker.forgath.ru/` keep enforced CSP with `frame-ancestors 'self'` and `form-action 'self'`.
 
 ## Important Operational Notes
 
 - Real registration email delivery was not triggered because sending email and creating a registration code is a side-effect/UAT action, not read-only smoke.
 - Owner UAT can validate real registration email delivery with a chosen test recipient.
-- Direct hbl SSH/kubectl remains unavailable from this local environment, but release-builder workflow evidence provided live image, Helm revision, rollout status and evidence path.
+- Direct hbl SSH/kubectl is available only with explicit owner approval in the current conversation and was used once for `NOF-INFRA-40` after approval.
 - Do not run hbl/VPS/production-changing commands without explicit owner approval in the current conversation.
 - Do not print or store game passwords, private keys, tokens, database URLs or Kubernetes secret values.
 - SPRINT-14 deploy-unification remains paused.
@@ -163,7 +182,7 @@ Updated: 2026-06-26.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
 - Applying nof-ht Helm refs to live hbl/nof-ht still requires separate owner approval.
 - Next real nof-mp GitHub Release should validate the restored automatic dispatch bridge under normal release gates.
-- Standby rule for next session: do not start new nof-infra work until the owner or discovery-agent provides a ready sprint/task. The expected next production-bound work is nof-mp release after `NOF-MP-43 + identity` merge to `main` and explicit owner approval in the current chat.
+- Standby rule for next session: do not start new nof-infra work until the owner or discovery-agent provides a ready sprint/task.
 - Rollback target for `NOF-INFRA-38`, if separately approved later: nof-tt `v0.2.36`.
 - `NOF-INFRA-39` release preflight blocker:
   - nof-mp `origin/main` is `e36a14d` and contains canonical identity schema;
@@ -176,6 +195,9 @@ Updated: 2026-06-26.
 - `NOF-INFRA-39` is done. Remaining UAT caveat:
   - public unauthenticated pages did not expose a visible `v0.2.90` footer/version marker;
   - owner/authenticated UAT should verify the portal footer/version marker, or nof-mp should add a future public version endpoint if that evidence must be machine-checkable.
+- `NOF-INFRA-40` is done. Remaining owner UAT:
+  - authenticated OIDC consent approve into Task Tracker should complete without browser CSP `form-action` violation;
+  - authenticated OIDC consent approve into Habit Tracker should complete without browser CSP `form-action` violation.
 
 ## Backlog Candidates
 
