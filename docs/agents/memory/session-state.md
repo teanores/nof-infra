@@ -1,18 +1,19 @@
 # nof-infra Agent Session State
 
-Updated: 2026-06-27.
+Updated: 2026-06-29.
 
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
-- Active nof-infra sprint: none.
-- Agent mode: standby after nof-mp release deploy.
+- Active nof-infra sprint: `NOF-INFRA-SPRINT-21`.
+- Agent mode: blocked on GitHub CLI workflow auth scope.
 - Latest closed sprint: `NOF-INFRA-SPRINT-20` — nof-mp `v0.2.91` admin identity reconciliation console deploy.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
 - `NOF-INFRA-SPRINT-20` is closed as `done`.
 - Latest approved production action: `NOF-INFRA-41` deploy of nof-mp `v0.2.91` through github-runner release-builder.
 - Latest completed work: admin identity reconciliation console shipped to production; no prod identity DATA migration was run.
 - No secret values were read, printed or changed.
+- Current blocker: `NOF-INFRA-42` cannot run release-builder dry-run/deploy because local `gh` token lacks `workflow` scope.
 
 ## Completed Work In Latest Session
 
@@ -82,6 +83,12 @@ Updated: 2026-06-27.
   - shipped admin identity reconciliation console to production;
   - no prod identity DATA migration was run;
   - manual per-person owner reconciliation remains a separate owner/UAT action.
+- `NOF-INFRA-SPRINT-21` started and is blocked:
+  - active task `NOF-INFRA-42`;
+  - scope: Phase-4 batch deploy for nof-mp `v0.2.93` and nof-ht bot release `v1.33.61`;
+  - nof-infra Helm/release refs were prepared and pushed;
+  - production deploy and release-builder dry-runs are blocked because GitHub CLI auth lacks `workflow` scope;
+  - no production deploy, hbl change, Kubernetes secret mutation or secret value read was run.
 
 ## Verification Evidence
 
@@ -196,6 +203,17 @@ Updated: 2026-06-27.
   - unauthenticated `https://forgath.ru/admin/users` returned `307` to `/login?next=%2Fadmin%2Fusers`;
   - `https://forgath.ru/products/task-tracker/launch` returned `303` to `/login?next=%2Fproducts%2Ftask-tracker%2Flaunch`;
   - live CSP still includes the `NOF-INFRA-40` `form-action` allowlist for task-tracker and habit-tracker.
+- `NOF-INFRA-42` Phase-4 pre-deploy prep evidence:
+  - nof-infra commit `3636393 chore: prepare phase4 release refs`;
+  - nof-infra merge commit `e2d1c3c merge: prepare phase4 release refs` pushed to `origin/main`;
+  - nof-mp Helm mounts metadata refs for `NOF_MP_BOT_GATEWAY_TOKEN` and `NOF_MP_TG_LINK_TOKEN_SECRET` from Kubernetes Secret `nof-mp-bot-secrets`;
+  - nof-ht Helm documents `NOFMP_BOT_SERVICE_TOKEN` expected in `nof-ht-secrets`;
+  - nof-ht Chart/appVersion and values appVersion set to `1.33.61`;
+  - hbl desired-state inventory updated to nof-mp `v0.2.93` and nof-ht `v1.33.61` with `enabled=false`;
+  - nof-infra `just test` passed;
+  - `git diff --check` passed;
+  - local refs: nof-mp `v0.2.93` -> `245ccb0881b70cc158226e41e463b5c0b8607f65`, nof-ht `v1.33.61` -> `6210d4d07db91366416d6e6ade276d9d7a34eea4`;
+  - remote tags exist for nof-mp `v0.2.93` and nof-ht `v1.33.61`.
 
 ## Important Operational Notes
 
@@ -204,6 +222,11 @@ Updated: 2026-06-27.
 - Direct hbl SSH/kubectl is available only with explicit owner approval in the current conversation and was used once for `NOF-INFRA-40` after approval.
 - Do not run hbl/VPS/production-changing commands without explicit owner approval in the current conversation.
 - Do not print or store game passwords, private keys, tokens, database URLs or Kubernetes secret values.
+- `NOF-INFRA-42` blocker to resume:
+  - local `gh auth status` shows token scopes `admin:public_key`, `gist`, `read:org`, `repo`;
+  - `workflow` scope is missing, so `gh workflow run release-builder.yml` fails with `HTTP 401 Bad credentials`;
+  - owner attempted `gh auth refresh -h github.com -s workflow`, but device-flow ended with `unexpected EOF`;
+  - resume after `gh auth status` includes `workflow`, or after owner manually triggers GitHub UI dry-runs.
 - SPRINT-14 deploy-unification remains paused.
 - OpenBao Secrets ADR remains parked; `NOF-INFRA-34` tracks the future pilot.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
@@ -221,10 +244,16 @@ Updated: 2026-06-27.
   - login as admin and open the admin identity reconciliation console;
   - verify the console is admin-only and performs no writes until explicit owner action;
   - reconcile owner accounts manually as a separate per-person step.
+- `NOF-INFRA-42` is not done. Remaining before production:
+  - run release-builder dry-runs with `execute_deploy=false` for nof-mp `v0.2.93` and nof-ht `v1.33.61`;
+  - confirm/provision secret values through secure channel only: `nof-mp-bot-secrets` keys `NOF_MP_BOT_GATEWAY_TOKEN`, `NOF_MP_TG_LINK_TOKEN_SECRET`, and `nof-ht-secrets` key `NOFMP_BOT_SERVICE_TOKEN`;
+  - confirm nof-ht live issuer/base metadata points to `https://forgath.ru`;
+  - give owner briefing and get explicit current-chat GO before production deploy;
+  - do not run prod identity DATA migration.
 
 ## Backlog Candidates
 
-No active sprint exists. Before taking backlog work, run a short planning step or wait for discovery-agent priorities.
+`NOF-INFRA-SPRINT-21` is active but blocked on GitHub CLI workflow auth. Do not take backlog work until this sprint is unblocked, moved, or owner reprioritizes.
 
 Known candidates still visible in tracker:
 
