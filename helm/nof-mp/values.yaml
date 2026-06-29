@@ -74,6 +74,12 @@ secretEnv:
   SMTP_PASS:
     secretName: nof-mp-email-secrets
     key: SMTP_PASS
+  NOF_MP_BOT_GATEWAY_TOKEN:
+    secretName: nof-mp-bot-secrets
+    key: NOF_MP_BOT_GATEWAY_TOKEN
+  NOF_MP_TG_LINK_TOKEN_SECRET:
+    secretName: nof-mp-bot-secrets
+    key: NOF_MP_TG_LINK_TOKEN_SECRET
 
 resources:
   limits:
