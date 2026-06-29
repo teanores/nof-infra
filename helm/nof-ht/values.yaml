@@ -14,7 +14,7 @@ telegramBotId: "8750634200"
 # Shared public NOF community/product bot. nof-ht uses it for habits/LLM/ideas.
 # Identity/linking bot is @nof_sentinel_bot.
 telegramHabitBotUsername: "naragothal_bot"
-appVersion: "1.33.59"
+appVersion: "1.33.61"
 
 # nof-mp OIDC Phase 2 metadata for nof-ht.
 # Secret values stay in Kubernetes Secret `nof-ht-oauth-secrets` as keys

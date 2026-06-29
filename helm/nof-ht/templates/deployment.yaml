@@ -23,6 +23,9 @@ spec:
             - containerPort: 3000
           envFrom:
             - secretRef:
+                # Expected bot onboarding bridge key:
+                # - NOFMP_BOT_SERVICE_TOKEN
+                # Secret values remain in Kubernetes, never in git.
                 name: nof-ht-secrets
             - secretRef:
                 # Expected Phase 2 OIDC keys:
