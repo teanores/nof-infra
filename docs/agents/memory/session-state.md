@@ -1,19 +1,19 @@
 # nof-infra Agent Session State
 
-Updated: 2026-06-29.
+Updated: 2026-06-30.
 
 ## Current Status
 
 - Active tracker goal: `NOF-INFRA-GOAL-RELEASE-AND-OPS-OWNERSHIP`.
 - Active nof-infra sprint: `NOF-INFRA-SPRINT-21`.
-- Agent mode: blocked on GitHub CLI workflow auth scope.
+- Agent mode: blocked on Phase-4 env naming contract.
 - Latest closed sprint: `NOF-INFRA-SPRINT-20` — nof-mp `v0.2.91` admin identity reconciliation console deploy.
 - `nof-infra` `main` is clean and aligned with `origin/main`.
 - `NOF-INFRA-SPRINT-20` is closed as `done`.
 - Latest approved production action: `NOF-INFRA-41` deploy of nof-mp `v0.2.91` through github-runner release-builder.
 - Latest completed work: admin identity reconciliation console shipped to production; no prod identity DATA migration was run.
 - No secret values were read, printed or changed.
-- Current blocker: `NOF-INFRA-42` cannot run release-builder dry-run/deploy because local `gh` token lacks `workflow` scope.
+- Current blocker: `NOF-INFRA-42` must not deploy while nof-ht release expects non-canonical `NOFMP_BOT_SERVICE_TOKEN`.
 
 ## Completed Work In Latest Session
 
@@ -87,7 +87,8 @@ Updated: 2026-06-29.
   - active task `NOF-INFRA-42`;
   - scope: Phase-4 batch deploy for nof-mp `v0.2.93` and nof-ht bot release `v1.33.61`;
   - nof-infra Helm/release refs were prepared and pushed;
-  - production deploy and release-builder dry-runs are blocked because GitHub CLI auth lacks `workflow` scope;
+  - GitHub CLI auth was repaired and release-builder dry-runs passed;
+  - production deploy is blocked because nof-ht currently expects non-canonical env `NOFMP_BOT_SERVICE_TOKEN`;
   - no production deploy, hbl change, Kubernetes secret mutation or secret value read was run.
 
 ## Verification Evidence
@@ -212,8 +213,17 @@ Updated: 2026-06-29.
   - hbl desired-state inventory updated to nof-mp `v0.2.93` and nof-ht `v1.33.61` with `enabled=false`;
   - nof-infra `just test` passed;
   - `git diff --check` passed;
+  - GitHub CLI auth now includes `workflow` scope;
+  - nof-mp `v0.2.93` dry-run with `execute_deploy=false` passed, GitHub Actions run `28425354222`;
+  - nof-ht `v1.33.61` dry-run with `execute_deploy=false` passed, GitHub Actions run `28425355591`;
   - local refs: nof-mp `v0.2.93` -> `245ccb0881b70cc158226e41e463b5c0b8607f65`, nof-ht `v1.33.61` -> `6210d4d07db91366416d6e6ade276d9d7a34eea4`;
   - remote tags exist for nof-mp `v0.2.93` and nof-ht `v1.33.61`.
+- `NOF-INFRA-42` hbl prereq check evidence:
+  - owner approved read-only hbl secret metadata/prereq check on 2026-06-30;
+  - `nof-mp-bot-secrets` does not exist in namespace `nof-apps`;
+  - `nof-ht-secrets` exists but selected key `NOFMP_BOT_SERVICE_TOKEN` is missing;
+  - live nof-ht ConfigMap has `NOF_PLATFORM_ISSUER=https://forgath.ru`, `NEXT_PUBLIC_CANONICAL_URL=https://habit-tracker.forgath.ru`, `NEXT_PUBLIC_APP_VERSION=1.33.60`, and no `NOFMP_ISSUER`;
+  - no secret values were printed.
 
 ## Important Operational Notes
 
@@ -223,10 +233,11 @@ Updated: 2026-06-29.
 - Do not run hbl/VPS/production-changing commands without explicit owner approval in the current conversation.
 - Do not print or store game passwords, private keys, tokens, database URLs or Kubernetes secret values.
 - `NOF-INFRA-42` blocker to resume:
-  - local `gh auth status` shows token scopes `admin:public_key`, `gist`, `read:org`, `repo`;
-  - `workflow` scope is missing, so `gh workflow run release-builder.yml` fails with `HTTP 401 Bad credentials`;
-  - owner attempted `gh auth refresh -h github.com -s workflow`, but device-flow ended with `unexpected EOF`;
-  - resume after `gh auth status` includes `workflow`, or after owner manually triggers GitHub UI dry-runs.
+  - owner rejected `NOFMP_BOT_SERVICE_TOKEN` as non-canonical naming;
+  - nof-ht `app/lib/bot-onboarding.ts` currently reads `process.env.NOFMP_BOT_SERVICE_TOKEN`;
+  - nof-ht `AGENTS.md` documents `NOFMP_BOT_SERVICE_TOKEN` as an optional env var;
+  - nof-mp endpoint expects `NOF_MP_BOT_GATEWAY_TOKEN`;
+  - do not provision `NOFMP_BOT_SERVICE_TOKEN` or deploy Phase-4 until nof-ht provides a corrected release tag or owner explicitly accepts a temporary alias with tracked debt.
 - SPRINT-14 deploy-unification remains paused.
 - OpenBao Secrets ADR remains parked; `NOF-INFRA-34` tracks the future pilot.
 - `NOF-TT-200` rollback target, if separately approved later: nof-tt `v0.2.35`.
@@ -245,15 +256,17 @@ Updated: 2026-06-29.
   - verify the console is admin-only and performs no writes until explicit owner action;
   - reconcile owner accounts manually as a separate per-person step.
 - `NOF-INFRA-42` is not done. Remaining before production:
-  - run release-builder dry-runs with `execute_deploy=false` for nof-mp `v0.2.93` and nof-ht `v1.33.61`;
-  - confirm/provision secret values through secure channel only: `nof-mp-bot-secrets` keys `NOF_MP_BOT_GATEWAY_TOKEN`, `NOF_MP_TG_LINK_TOKEN_SECRET`, and `nof-ht-secrets` key `NOFMP_BOT_SERVICE_TOKEN`;
-  - confirm nof-ht live issuer/base metadata points to `https://forgath.ru`;
+  - get corrected nof-ht release tag that uses canonical bot service token env naming, likely `NOF_MP_BOT_GATEWAY_TOKEN`;
+  - update nof-infra Helm expectation away from `NOFMP_BOT_SERVICE_TOKEN`;
+  - rerun `just test`, `git diff --check`, and release-builder dry-run for corrected nof-ht tag;
+  - confirm/provision secret values through secure channel only: `nof-mp-bot-secrets` keys `NOF_MP_BOT_GATEWAY_TOKEN`, `NOF_MP_TG_LINK_TOKEN_SECRET`, and the corrected nof-ht secret key;
+  - confirm live nof-ht issuer/base metadata points to `https://forgath.ru` after deploy target is corrected;
   - give owner briefing and get explicit current-chat GO before production deploy;
   - do not run prod identity DATA migration.
 
 ## Backlog Candidates
 
-`NOF-INFRA-SPRINT-21` is active but blocked on GitHub CLI workflow auth. Do not take backlog work until this sprint is unblocked, moved, or owner reprioritizes.
+`NOF-INFRA-SPRINT-21` is active but blocked on nof-ht env naming. Do not take backlog work until this sprint is unblocked, moved, or owner reprioritizes.
 
 Known candidates still visible in tracker:
 
